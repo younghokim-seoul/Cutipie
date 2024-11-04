@@ -1,4 +1,4 @@
-package com.cm.cutipie
+package com.cutipie.app
 
 import io.flutter.embedding.android.FlutterActivity
 

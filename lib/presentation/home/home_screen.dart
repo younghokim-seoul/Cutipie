@@ -14,7 +14,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 final webKeyProvider = Provider((ref) => GlobalKey());
 
 final baseUriProvider = Provider<String>((ref) {
-  return "http://qutipie-balancer-388269196.ap-northeast-2.elb.amazonaws.com/";
+  return "https://cutipieapp.com";
 });
 
 @RoutePage()
@@ -32,23 +32,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   late InAppWebViewController _webviewController;
   final Completer<void> _onPageFinishedCompleter = Completer<void>();
   var gestureRecognizer = NestedVerticalScrollGestureRecognizer();
-
-  final InAppWebViewSettings _options = InAppWebViewSettings(
-      useShouldOverrideUrlLoading: true,
-      // URL 로딩 제어
-      mediaPlaybackRequiresUserGesture: false,
-      // 미디어 자동 재생
-      javaScriptEnabled: true,
-      // 자바스크립트 실행 여부
-      javaScriptCanOpenWindowsAutomatically: true,
-      // 팝업 여부
-      useHybridComposition: true,
-      // 하이브리드 사용을 위한 안드로이드 웹뷰 최적화
-      supportMultipleWindows: true,
-      // 멀티 윈도우 허용
-      allowsInlineMediaPlayback: true);
-
-  // 웹뷰 내 미디어 재생 허용);
 
   @override
   void initState() {
@@ -120,8 +103,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               if (appScheme.isAppLink()) {
                 print("씨발 앱링크 : $handled");
                 await appScheme.launchApp(
-                    mode: LaunchMode
-                        .externalApplication); // 앱 설치 상태에 따라 앱 실행 또는 마켓으로 이동
+                    mode: LaunchMode.externalApplication); // 앱 설치 상태에 따라 앱 실행 또는 마켓으로 이동
                 return NavigationActionPolicy.CANCEL;
               }
 
@@ -133,8 +115,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 settings: InAppWebViewSettings(
                   allowsBackForwardNavigationGestures: false,
                   useShouldOverrideUrlLoading: true,
-                  userAgent:
-                      "Mozilla/5.0 (Linux; Android 9; LG-H870 Build/PKQ1.190522.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/83.0.4103.106 Mobile Safari/537.36",
+                  useHybridComposition: true,
+                  userAgent: "Mozilla/5.0 (Linux; Android 9; LG-H870 Build/PKQ1.190522.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/83.0.4103.106 Mobile Safari/537.36",
                   resourceCustomSchemes: ['intent', 'market'],
                 ),
               );
