@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:auto_route/auto_route.dart';
+import 'package:cutipie/main.dart';
+import 'package:cutipie/presentation/util/app_dialog.dart';
+import 'package:cutipie/presentation/util/dialog_service.dart';
 import 'package:cutipie/presentation/util/gesture_recognizer.dart';
 import 'package:cutipie/presentation/util/url.dart';
 import 'package:flutter/foundation.dart';
@@ -14,7 +17,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 final webKeyProvider = Provider((ref) => GlobalKey());
 
 final baseUriProvider = Provider<String>((ref) {
-  return "http://qutipie-balancer-388269196.ap-northeast-2.elb.amazonaws.com/";
+  return "https://pay.snpay.co.kr";
 });
 
 @RoutePage()
@@ -27,28 +30,11 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen>
     with AutomaticKeepAliveClientMixin {
-  double progress = 0;
+
 
   late InAppWebViewController _webviewController;
   final Completer<void> _onPageFinishedCompleter = Completer<void>();
   var gestureRecognizer = NestedVerticalScrollGestureRecognizer();
-
-  final InAppWebViewSettings _options = InAppWebViewSettings(
-      useShouldOverrideUrlLoading: true,
-      // URL 로딩 제어
-      mediaPlaybackRequiresUserGesture: false,
-      // 미디어 자동 재생
-      javaScriptEnabled: true,
-      // 자바스크립트 실행 여부
-      javaScriptCanOpenWindowsAutomatically: true,
-      // 팝업 여부
-      useHybridComposition: true,
-      // 하이브리드 사용을 위한 안드로이드 웹뷰 최적화
-      supportMultipleWindows: true,
-      // 멀티 윈도우 허용
-      allowsInlineMediaPlayback: true);
-
-  // 웹뷰 내 미디어 재생 허용);
 
   @override
   void initState() {
@@ -57,6 +43,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       body: SafeArea(
         child: PopScope(
@@ -67,27 +54,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             if (canGoBack) {
               _webviewController.goBack();
             } else {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: Text('앱 종료'),
-                  content: Text('앱이 종료됩니다.'),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: Text('아니오'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        SystemNavigator.pop();
-                      },
-                      child: Text('예'),
-                    ),
-                  ],
-                ),
-              );
+              if(context.mounted){
+                DialogService.show(
+                  context: context,
+                  dialog: AppDialog.dividedBtn(
+                    title: "앱 종료 알림",
+                    subTitle: "앱을 종료 하시겠습니까?",
+                    description: "확인을 누르면 종료됩니다.",
+                    leftBtnContent: "종료",
+                    rightBtnContent: "취소",
+                    showContentImg: false,
+                    onRightBtnClicked: () async {
+                      context.router.popForced();
+                    },
+                    onLeftBtnClicked: () {
+                      context.router.popForced();
+                      SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+                    },
+                  ),
+                );
+              }
             }
           },
           child: InAppWebView(
@@ -108,8 +94,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               gestureRecognizer.scrollY = y;
             },
             gestureRecognizers: {Factory(() => gestureRecognizer)},
-            initialUrlRequest:
-                URLRequest(url: WebUri(ref.watch(baseUriProvider))),
             shouldOverrideUrlLoading: (controller, request) async {
               var handled = request.request.url.toString();
 
@@ -118,7 +102,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               final appScheme = ConvertUrl(handled);
 
               if (appScheme.isAppLink()) {
-                print("씨발 앱링크 : $handled");
                 await appScheme.launchApp(
                     mode: LaunchMode
                         .externalApplication); // 앱 설치 상태에 따라 앱 실행 또는 마켓으로 이동
@@ -145,6 +128,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     urlRequest:
                         URLRequest(url: WebUri.uri(Uri.parse('about:blank'))));
               }
+
+              _webviewController.loadUrl(urlRequest: URLRequest(url: WebUri(ref.watch(baseUriProvider))));
             },
             onLoadStop: (controller, url) {
               if (url.toString() == 'about:blank') {
