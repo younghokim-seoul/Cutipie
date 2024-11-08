@@ -2,6 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:auto_route/auto_route.dart';
+import 'package:cutipie/presentation/home/home_event.dart';
+import 'package:cutipie/presentation/util/dev_log.dart';
+import 'package:cutipie/presentation/util/dialog/app_dialog.dart';
+import 'package:cutipie/presentation/util/dialog/dialog_service.dart';
 import 'package:cutipie/presentation/util/gesture_recognizer.dart';
 import 'package:cutipie/presentation/util/url.dart';
 import 'package:flutter/foundation.dart';
@@ -25,8 +29,7 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen>
-    with AutomaticKeepAliveClientMixin {
+class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAliveClientMixin , HomeEvent{
   double progress = 0;
 
   late InAppWebViewController _webviewController;
@@ -50,35 +53,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             if (canGoBack) {
               _webviewController.goBack();
             } else {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: Text('앱 종료'),
-                  content: Text('앱이 종료됩니다.'),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: Text('아니오'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        SystemNavigator.pop();
-                      },
-                      child: Text('예'),
-                    ),
-                  ],
-                ),
-              );
+              if(context.mounted){
+                DialogService.show(
+                  context: context,
+                  dialog: AppDialog.dividedBtn(
+                    title: "앱 종료 알림",
+                    subTitle: "앱을 종료 하시겠습니까?",
+                    description: "확인을 누르면 종료됩니다.",
+                    leftBtnContent: "종료",
+                    rightBtnContent: "취소",
+                    showContentImg: false,
+                    onRightBtnClicked: () async {
+                      context.router.popForced();
+                    },
+                    onLeftBtnClicked: () {
+                      context.router.popForced();
+                      SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+                    },
+                  ),
+                );
+              }
             }
           },
           child: InAppWebView(
             key: ref.watch(webKeyProvider),
             onLoadResourceWithCustomScheme: (controller, url) async {
               List<String> prefixes = ["intent", "market"];
-              RegExp regExp =
-                  RegExp("^(${prefixes.map(RegExp.escape).join('|')})");
+              RegExp regExp = RegExp("^(${prefixes.map(RegExp.escape).join('|')})");
               if (regExp.hasMatch(url.url.rawValue)) {
                 await _webviewController.stopLoading();
                 return null;
@@ -91,8 +92,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               gestureRecognizer.scrollY = y;
             },
             gestureRecognizers: {Factory(() => gestureRecognizer)},
-            initialUrlRequest:
-                URLRequest(url: WebUri(ref.watch(baseUriProvider))),
+            initialUrlRequest: URLRequest(url: WebUri(ref.watch(baseUriProvider))),
             shouldOverrideUrlLoading: (controller, request) async {
               var handled = request.request.url.toString();
 
@@ -101,9 +101,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               final appScheme = ConvertUrl(handled);
 
               if (appScheme.isAppLink()) {
-                print("씨발 앱링크 : $handled");
-                await appScheme.launchApp(
-                    mode: LaunchMode.externalApplication); // 앱 설치 상태에 따라 앱 실행 또는 마켓으로 이동
+                print("앱링크 : $handled");
+                await appScheme.launchApp(mode: LaunchMode.externalApplication); // 앱 설치 상태에 따라 앱 실행 또는 마켓으로 이동
                 return NavigationActionPolicy.CANCEL;
               }
 
@@ -116,17 +115,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   allowsBackForwardNavigationGestures: false,
                   useShouldOverrideUrlLoading: true,
                   useHybridComposition: true,
-                  userAgent: "Mozilla/5.0 (Linux; Android 9; LG-H870 Build/PKQ1.190522.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/83.0.4103.106 Mobile Safari/537.36",
+                  javaScriptEnabled: true,
+                  userAgent:
+                      "Mozilla/5.0 (Linux; Android 9; LG-H870 Build/PKQ1.190522.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/83.0.4103.106 Mobile Safari/537.36",
                   resourceCustomSchemes: ['intent', 'market'],
                 ),
               );
+              addJavascriptChannels();
               evaluateJavascript(bridgeScript);
+
               if (Platform.isIOS) {
                 // safari에서 히스토리가 쌓이지 않아 뒤로가기가 먹통인 현상 해결
-                _webviewController.loadUrl(
-                    urlRequest:
-                        URLRequest(url: WebUri.uri(Uri.parse('about:blank'))));
+                _webviewController.loadUrl(urlRequest: URLRequest(url: WebUri.uri(Uri.parse('about:blank'))));
               }
+
             },
             onLoadStop: (controller, url) {
               if (url.toString() == 'about:blank') {
@@ -142,12 +144,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
+  void addJavascriptChannels() {
+    Log.d('addJavascriptChannels');
+    _webviewController.addJavaScriptHandler(
+        handlerName: 'web2app_startVoiceRecording',
+        callback: (args) {
+          Log.d('녹음 시작!!');
+        });
+
+    _webviewController.addJavaScriptHandler(
+        handlerName: 'web2app_finishVoiceRecording',
+        callback: (args) {
+          Log.d('전송.');
+        });
+  }
+
   void evaluateJavascript(String script) async {
     if (_onPageFinishedCompleter.isCompleted) {
       _webviewController.evaluateJavascript(source: script);
     } else {
-      await _onPageFinishedCompleter.future.then(
-          (_) => _webviewController.evaluateJavascript(source: script) ?? '');
+      await _onPageFinishedCompleter.future.then((_) => _webviewController.evaluateJavascript(source: script) ?? '');
     }
   }
 
@@ -155,3 +171,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   bool get wantKeepAlive => true;
   static const bridgeScript = '';
 }
+
+
+class JavascriptChannel {
+  final String name;
+  final OnReceivedJSONObject onReceived;
+
+  const JavascriptChannel({required this.name, required this.onReceived});
+}
+
+typedef OnReceivedJSONObject = void Function(Map<String, dynamic>);
