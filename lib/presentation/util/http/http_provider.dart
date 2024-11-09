@@ -26,7 +26,7 @@ class HttpProvider {
     );
     request.fields.addAll(data);
     request.headers.addAll(headers);
-    request.files.add(await http.MultipartFile.fromPath('file', recordPath));
+    request.files.add(await http.MultipartFile.fromPath('file', File(recordPath).path));
 
     var response = await request.send();
 

@@ -75,7 +75,6 @@ class RecordProvider {
     Log.d('stopRecord');
     _updateProgressState(RecordProgressState.loading);
 
-    recordController.cancel();
     await recordController.stop();
 
     _updateProgressState(RecordProgressState.recognized);
