@@ -1,18 +1,20 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:app_settings/app_settings.dart';
 import 'package:auto_route/auto_route.dart';
-import 'package:cutipie/presentation/home/home_event.dart';
 import 'package:cutipie/presentation/util/dev_log.dart';
 import 'package:cutipie/presentation/util/dialog/app_dialog.dart';
 import 'package:cutipie/presentation/util/dialog/dialog_service.dart';
 import 'package:cutipie/presentation/util/gesture_recognizer.dart';
+import 'package:cutipie/presentation/util/recrod/record_provider.dart';
 import 'package:cutipie/presentation/util/url.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 final webKeyProvider = Provider((ref) => GlobalKey());
@@ -29,16 +31,20 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAliveClientMixin , HomeEvent{
+class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAliveClientMixin {
   double progress = 0;
 
   late InAppWebViewController _webviewController;
   final Completer<void> _onPageFinishedCompleter = Completer<void>();
   var gestureRecognizer = NestedVerticalScrollGestureRecognizer();
 
+  late RecordProvider _recordProvider;
+
   @override
   void initState() {
     super.initState();
+
+    _recordProvider = ref.read(recordProvider);
   }
 
   @override
@@ -108,7 +114,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
 
               return NavigationActionPolicy.ALLOW;
             },
-            onWebViewCreated: (InAppWebViewController controller) {
+            onWebViewCreated: (InAppWebViewController controller) async {
               _webviewController = controller;
               _webviewController.setSettings(
                 settings: InAppWebViewSettings(
@@ -146,16 +152,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
 
   void addJavascriptChannels() {
     Log.d('addJavascriptChannels');
+
+    _webviewController.addJavaScriptHandler(
+        handlerName: 'web2app_checkVoicePermission',
+        callback: (args) async {
+          Log.d("권한 체크 $args");
+          Map<Permission, PermissionStatus> permissionStatus = await [Permission.microphone, Permission.speech,].request();
+
+          bool allPermissionsGranted = permissionStatus.values.every((status) => status.isGranted);
+          Log.d("allPermissionsGranted... $allPermissionsGranted");
+          if (allPermissionsGranted) {
+           final isInitSetting =  await _recordProvider.initConfigSettings();
+           if(!isInitSetting){
+             showNeedMicPermissionsDialog();
+             return;
+           }
+
+           _webviewController.evaluateJavascript(source: """
+                      window.flutter_inappwebview.callHandler('app2web_recordPermissionResult', true,3);
+                    """);
+
+           _recordProvider.startRecord();
+
+          }else{
+            showNeedMicPermissionsDialog();
+          }
+        });
+
     _webviewController.addJavaScriptHandler(
         handlerName: 'web2app_startVoiceRecording',
         callback: (args) {
           Log.d('녹음 시작!!');
+          _recordProvider.startRecord();
         });
 
     _webviewController.addJavaScriptHandler(
         handlerName: 'web2app_finishVoiceRecording',
-        callback: (args) {
+        callback: (args) async {
           Log.d('전송.');
+          await _recordProvider.stopRecord();
         });
   }
 
@@ -170,6 +205,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
   @override
   bool get wantKeepAlive => true;
   static const bridgeScript = '';
+
+
+  void showNeedMicPermissionsDialog() {
+    DialogService.show(
+      context: context,
+      dialog: AppDialog.dividedBtn(
+        title: "권한 필요",
+        subTitle: "설정에서 마이크 권한을 허용해 주세요.",
+        leftBtnContent: "취소",
+        showContentImg: false,
+        rightBtnContent: "설정하기",
+        onRightBtnClicked: () async {
+          AutoRouter.of(context).popForced();
+          await AppSettings.openAppSettings();
+        },
+        onLeftBtnClicked: () {
+          AutoRouter.of(context).popForced();
+        },
+      ),
+    );
+  }
 }
 
 
@@ -181,3 +237,5 @@ class JavascriptChannel {
 }
 
 typedef OnReceivedJSONObject = void Function(Map<String, dynamic>);
+
+

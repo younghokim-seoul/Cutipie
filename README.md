@@ -15,3 +15,6 @@ cutipie mobile client
 | Structure       | <img src="https://velog.velcdn.com/images/ximya_hf/post/344edd13-f828-453b-a9c1-7ee076898af6/image.png">  |
 
 <br/>
+
+
+https://yonglimlee.tistory.com/entry/flutterfire-configure-%EC%97%90%EB%9F%AC-%EA%B2%B0%EB%A1%A0%EC%9D%80-%EB%A1%9C%EA%B7%B8%EC%9D%B8
