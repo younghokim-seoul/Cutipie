@@ -1,6 +1,7 @@
 import 'package:cutipie/presentation/routers.dart';
 import 'package:cutipie/presentation/theme/app_color.dart';
 import 'package:cutipie/presentation/theme/app_theme.dart';
+import 'package:cutipie/presentation/util/ad_helper.dart';
 import 'package:cutipie/presentation/util/http/device_request.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,8 @@ void main() async {
   await MobileAds.instance.initialize();
   await Firebase.initializeApp();
   await DeviceRequests.getFcmToken();
+  AdHelper.init();
+
   runApp(MyApp());
 }
 
@@ -19,11 +22,6 @@ class MyApp extends StatelessWidget {
   MyApp({
     super.key,
   });
-
-  //h  5   /2
-
-  //s 2
-
   final appRouter = AppRouter();
 
   @override
