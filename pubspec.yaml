@@ -45,6 +45,10 @@ dependencies:
 
   path_provider: ^2.1.1
 
+  flutter_native_splash: ^2.4.2
+  flutter_local_notifications: ^18.0.1
+  device_info_plus: ^11.1.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -66,3 +70,4 @@ flutter:
   assets:
     - assets/
     - assets/app_icon/
+    - assets/images/

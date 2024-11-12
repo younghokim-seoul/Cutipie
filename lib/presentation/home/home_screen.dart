@@ -7,6 +7,8 @@ import 'package:cutipie/presentation/util/dev_log.dart';
 import 'package:cutipie/presentation/util/dialog/app_dialog.dart';
 import 'package:cutipie/presentation/util/dialog/dialog_service.dart';
 import 'package:cutipie/presentation/util/gesture_recognizer.dart';
+import 'package:cutipie/presentation/util/http/device_request.dart';
+import 'package:cutipie/presentation/util/http/http_provider.dart';
 import 'package:cutipie/presentation/util/purchase/purchase_provider.dart';
 import 'package:cutipie/presentation/util/recrod/record_provider.dart';
 import 'package:cutipie/presentation/util/url.dart';
@@ -209,6 +211,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
           }else{
             Log.d("인앱 결제 사용 불가능");
           }
+        });
+
+
+    _webviewController.addJavaScriptHandler(
+        handlerName: 'web2app_requestPayment',
+        callback: (args) async {
+          Log.d('[인앱 결제 연동] 웹프론트 -> 앱');
+          Log.d("	유저가 결제상품을 클릭 시 앱으로 해당 결제상품의 key, 회원 id 전달 $args");
+
+
+          if(await _purchaseProvider.isAvailable()){
+            await _purchaseProvider.fetchUserProducts();
+          }else{
+            Log.d("인앱 결제 사용 불가능");
+          }
+        });
+
+
+    _webviewController.addJavaScriptHandler(
+        handlerName: 'web2app_requestPushToken',
+        callback: (args) async {
+          Log.d('[푸쉬 토큰] 웹프론트 -> 앱');
+          Log.d("웹에서 앱으로 유저의 id 값 전달 $args");
+
+
+
+
+          try{
+            final httpService = ref.watch(networkProvider);
+            final fcmToken = await DeviceRequests.getFcmToken();
+            final response = await httpService.sendToPush(args.first, fcmToken!);
+            Log.d("푸쉬 토큰 전송 성공 " + response.toString());
+          }catch(e){
+            Log.d("푸쉬 토큰 전송 실패");
+          }
+
         });
 
   }

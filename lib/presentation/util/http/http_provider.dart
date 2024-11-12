@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cutipie/presentation/util/dev_log.dart';
@@ -38,6 +39,26 @@ class HttpProvider {
     }
   }
 
+
+  Future<bool> sendToPush(String id, String token) async {
+    const url = "https://cutipieapp.com/api/user/push-token";
+
+    Map<String, String> headers = {
+      'Authorization': "apiKey=nCfYVzFv6vDG1DD271DCD27C198F51655xfaCYqCJ3626E8E55txU5FrXCKhZDi8Kya8s",
+    };
+
+
+    Map<String, String> body = {
+      'id': id,
+      'token': token,
+    };
+    Uri uri = Uri.parse(url);
+    final response = await http.post(uri, headers: headers, body: json.encode(body));
+
+    Log.d("sendToPush response : ${response.statusCode}");
+
+    return response.statusCode >= 200 && response.statusCode < 300;
+  }
 
 
 }
