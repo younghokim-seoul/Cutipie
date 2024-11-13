@@ -1,4 +1,4 @@
-package com.cm.cutipie
+package kr.co.snpay
 
 import io.flutter.embedding.android.FlutterActivity
 
