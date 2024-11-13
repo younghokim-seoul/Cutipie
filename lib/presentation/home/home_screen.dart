@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:app_settings/app_settings.dart';
@@ -17,6 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -103,7 +105,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
               gestureRecognizer.scrollY = y;
             },
             gestureRecognizers: {Factory(() => gestureRecognizer)},
-            initialUrlRequest: URLRequest(url: WebUri(ref.watch(baseUriProvider))),
             shouldOverrideUrlLoading: (controller, request) async {
               var handled = request.request.url.toString();
 
@@ -139,7 +140,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
                 // safari에서 히스토리가 쌓이지 않아 뒤로가기가 먹통인 현상 해결
                 _webviewController.loadUrl(urlRequest: URLRequest(url: WebUri.uri(Uri.parse('about:blank'))));
               }
-
+              _webviewController.loadUrl(urlRequest: URLRequest(url: WebUri(ref.watch(baseUriProvider))));
             },
             onLoadStop: (controller, url) {
               if (url.toString() == 'about:blank') {
@@ -235,9 +236,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
           Log.d('[푸쉬 토큰] 웹프론트 -> 앱');
           Log.d("웹에서 앱으로 유저의 id 값 전달 $args");
 
-
-
-
           try{
             final httpService = ref.watch(networkProvider);
             final fcmToken = await DeviceRequests.getFcmToken();
@@ -247,6 +245,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
             Log.d("푸쉬 토큰 전송 실패");
           }
 
+        });
+
+
+    _webviewController.addJavaScriptHandler(
+        handlerName: 'web2app_playAd',
+        callback: (args) async {
+          Log.d('[광고 연동 기능] 웹프론트 -> 앱');
+          Log.d("웹에서 앱으로 유저의 id 값 전달 $args");
+        });
+
+
+    _webviewController.addJavaScriptHandler(
+        handlerName: 'web2app_shareToSNS',
+        callback: (args) async {
+          Log.d('[캡쳐내용 SNS 공유기능] 웹프론트 -> 앱');
+          Log.d("웹에서 기능 구현 후 파일 저장 및 파일명 앱으로 전송 $args");
+
+          // var status = args['data'];
+          //
+
+
+
+          // final decodedBytes = base64Decode(base64string);
+          // Directory tempdirectory = await pp.getTemporaryDirectory();
+          //
+          // File file = File("${tempdirectory.path}/${name}.${extension}");
+          // file.writeAsBytes(decodedBytes);
         });
 
   }
