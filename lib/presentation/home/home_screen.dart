@@ -4,7 +4,6 @@ import 'dart:io';
 
 import 'package:app_settings/app_settings.dart';
 import 'package:auto_route/auto_route.dart';
-import 'package:cutipie/presentation/util/data/share_status.dart';
 import 'package:cutipie/presentation/util/dev_log.dart';
 import 'package:cutipie/presentation/util/dialog/app_dialog.dart';
 import 'package:cutipie/presentation/util/dialog/dialog_service.dart';
@@ -17,14 +16,14 @@ import 'package:cutipie/presentation/util/url.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart' as pp;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
-
-import 'package:path_provider/path_provider.dart' as pp;
 
 final webKeyProvider = Provider((ref) => GlobalKey());
 
@@ -40,7 +39,8 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAliveClientMixin {
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with AutomaticKeepAliveClientMixin {
   double progress = 0;
 
   late InAppWebViewController _webviewController;
@@ -85,7 +85,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
                     },
                     onLeftBtnClicked: () {
                       context.router.popForced();
-                      SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+                      SystemChannels.platform
+                          .invokeMethod('SystemNavigator.pop');
                     },
                   ),
                 );
@@ -96,7 +97,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
             key: ref.watch(webKeyProvider),
             onLoadResourceWithCustomScheme: (controller, url) async {
               List<String> prefixes = ["intent", "market"];
-              RegExp regExp = RegExp("^(${prefixes.map(RegExp.escape).join('|')})");
+              RegExp regExp =
+                  RegExp("^(${prefixes.map(RegExp.escape).join('|')})");
               if (regExp.hasMatch(url.url.rawValue)) {
                 await _webviewController.stopLoading();
                 return null;
@@ -118,7 +120,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
 
               if (appScheme.isAppLink()) {
                 print("앱링크 : $handled");
-                await appScheme.launchApp(mode: LaunchMode.externalApplication); // 앱 설치 상태에 따라 앱 실행 또는 마켓으로 이동
+                await appScheme.launchApp(
+                    mode: LaunchMode
+                        .externalApplication); // 앱 설치 상태에 따라 앱 실행 또는 마켓으로 이동
                 return NavigationActionPolicy.CANCEL;
               }
 
@@ -142,9 +146,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
 
               if (Platform.isIOS) {
                 // safari에서 히스토리가 쌓이지 않아 뒤로가기가 먹통인 현상 해결
-                _webviewController.loadUrl(urlRequest: URLRequest(url: WebUri.uri(Uri.parse('about:blank'))));
+                _webviewController.loadUrl(
+                    urlRequest:
+                        URLRequest(url: WebUri.uri(Uri.parse('about:blank'))));
               }
-              _webviewController.loadUrl(urlRequest: URLRequest(url: WebUri(ref.watch(baseUriProvider))));
+              _webviewController.loadUrl(
+                  urlRequest:
+                      URLRequest(url: WebUri(ref.watch(baseUriProvider))));
             },
             onLoadStop: (controller, url) {
               if (url.toString() == 'about:blank') {
@@ -153,6 +161,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
               if (!_onPageFinishedCompleter.isCompleted) {
                 _onPageFinishedCompleter.complete();
               }
+            },
+            onDownloadStartRequest: (controller, url) async {
+              final directory = await getExternalStorageDirectory();
+              final externalStorageDirPath = directory?.path;
+
+              final taskId = await FlutterDownloader.enqueue(
+                  url: url.toString(),
+                  savedDir: externalStorageDirPath!,
+                  showNotification: true,
+                  openFileFromNotification: true,
+                  saveInPublicStorage: true);
             },
           ),
         ),
@@ -172,7 +191,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
             Permission.speech,
           ].request();
 
-          bool allPermissionsGranted = permissionStatus.values.every((status) => status.isGranted);
+          bool allPermissionsGranted =
+              permissionStatus.values.every((status) => status.isGranted);
           Log.d("allPermissionsGranted... $allPermissionsGranted");
           if (allPermissionsGranted) {
             final isInitSetting = await _recordProvider.initConfigSettings();
@@ -240,7 +260,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
           try {
             final httpService = ref.watch(networkProvider);
             final fcmToken = await DeviceRequests.getFcmToken();
-            final response = await httpService.sendToPush(args.first, fcmToken!);
+            final response =
+                await httpService.sendToPush(args.first, fcmToken!);
             Log.d("푸쉬 토큰 전송 성공 " + response.toString());
           } catch (e) {
             Log.d("푸쉬 토큰 전송 실패");
@@ -277,16 +298,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
           Log.d("file size... $fileSize");
           Log.d("filePath... $filePath");
 
-          final result = await Share.shareXFiles([XFile(filePath)], text: 'Great picture');
+          final result =
+              await Share.shareXFiles([XFile(filePath)], text: 'Great picture');
           Log.d('result.. ${result.status}');
 
           if (result.status == ShareResultStatus.success) {
             Log.d('Thank you for sharing the picture!');
             await file.delete();
           }
-
-
-
         });
   }
 
@@ -294,7 +313,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
     if (_onPageFinishedCompleter.isCompleted) {
       _webviewController.evaluateJavascript(source: script);
     } else {
-      await _onPageFinishedCompleter.future.then((_) => _webviewController.evaluateJavascript(source: script) ?? '');
+      await _onPageFinishedCompleter.future.then(
+          (_) => _webviewController.evaluateJavascript(source: script) ?? '');
     }
   }
 

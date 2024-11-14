@@ -10,6 +10,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -26,10 +27,7 @@ const channel = AndroidNotificationChannel(
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // If you're going to use other Firebase services in the background, such as Firestore,
-  // make sure you call `initializeApp` before using other Firebase services.
   await Firebase.initializeApp();
-
   print("Handling a background message: ${message.messageId}");
 }
 
@@ -41,21 +39,21 @@ void onSelectNotification(NotificationResponse details) async {
 }
 
 Future<bool> _permissionWithNotification() async {
-
-  if(Is.android){
+  if (Is.android) {
     final androidInfo = await deviceInfo.androidInfo;
-    if(androidInfo.version.sdkInt < 33){
+    if (androidInfo.version.sdkInt < 33) {
       return true;
     }
   }
-  Map<Permission, PermissionStatus> permissionStatus = await [Permission.notification].request();
-  bool allPermissionsGranted = permissionStatus.values.every((status) => status.isGranted);
+  Map<Permission, PermissionStatus> permissionStatus =
+      await [Permission.notification].request();
+  bool allPermissionsGranted =
+      permissionStatus.values.every((status) => status.isGranted);
   return allPermissionsGranted;
 }
 
 Future<void> initializeNotification() async {
-
-  if(!await _permissionWithNotification()){
+  if (!await _permissionWithNotification()) {
     return;
   }
 
@@ -63,11 +61,13 @@ Future<void> initializeNotification() async {
   await local
       .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>()
-      ?.createNotificationChannel(AndroidNotificationChannel(
-        channel.id,
-        channel.name,
-        importance: channel.importance,
-      ));
+      ?.createNotificationChannel(
+        AndroidNotificationChannel(
+          channel.id,
+          channel.name,
+          importance: channel.importance,
+        ),
+      );
 
   await local.initialize(
       const InitializationSettings(
@@ -131,12 +131,12 @@ Future<void> initializeNotification() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await FlutterDownloader.initialize(debug: true, ignoreSsl: true);
   await MobileAds.instance.initialize();
   await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   initializeNotification();
   AdHelper.init();
-
   runApp(MyApp());
 }
 
