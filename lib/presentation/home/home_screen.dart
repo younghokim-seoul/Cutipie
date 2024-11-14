@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:app_settings/app_settings.dart';
 import 'package:auto_route/auto_route.dart';
+import 'package:cutipie/presentation/util/data/share_status.dart';
 import 'package:cutipie/presentation/util/dev_log.dart';
 import 'package:cutipie/presentation/util/dialog/app_dialog.dart';
 import 'package:cutipie/presentation/util/dialog/dialog_service.dart';
@@ -20,7 +21,10 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+
+import 'package:path_provider/path_provider.dart' as pp;
 
 final webKeyProvider = Provider((ref) => GlobalKey());
 
@@ -66,7 +70,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
             if (canGoBack) {
               _webviewController.goBack();
             } else {
-              if(context.mounted){
+              if (context.mounted) {
                 DialogService.show(
                   context: context,
                   dialog: AppDialog.dividedBtn(
@@ -163,24 +167,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
         handlerName: 'web2app_checkVoicePermission',
         callback: (args) async {
           Log.d("권한 체크 $args");
-          Map<Permission, PermissionStatus> permissionStatus = await [Permission.microphone, Permission.speech,].request();
+          Map<Permission, PermissionStatus> permissionStatus = await [
+            Permission.microphone,
+            Permission.speech,
+          ].request();
 
           bool allPermissionsGranted = permissionStatus.values.every((status) => status.isGranted);
           Log.d("allPermissionsGranted... $allPermissionsGranted");
           if (allPermissionsGranted) {
-           final isInitSetting =  await _recordProvider.initConfigSettings();
-           if(!isInitSetting){
-             showNeedMicPermissionsDialog();
-             return;
-           }
+            final isInitSetting = await _recordProvider.initConfigSettings();
+            if (!isInitSetting) {
+              showNeedMicPermissionsDialog();
+              return;
+            }
 
-           _webviewController.evaluateJavascript(source: """
+            _webviewController.evaluateJavascript(source: """
                       window.flutter_inappwebview.callHandler('app2web_recordPermissionResult', true,3);
                     """);
 
-           _recordProvider.startRecord();
-
-          }else{
+            _recordProvider.startRecord();
+          } else {
             showNeedMicPermissionsDialog();
           }
         });
@@ -199,6 +205,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
           await _recordProvider.stopRecord();
         });
 
+    _webviewController.addJavaScriptHandler(
+        handlerName: 'web2app_requestPayment',
+        callback: (args) async {
+          Log.d('[인앱 결제 연동] 웹프론트 -> 앱');
+          Log.d("	유저가 결제상품을 클릭 시 앱으로 해당 결제상품의 key, 회원 id 전달 $args");
+
+          if (await _purchaseProvider.isAvailable()) {
+            await _purchaseProvider.fetchUserProducts();
+          } else {
+            Log.d("인앱 결제 사용 불가능");
+          }
+        });
 
     _webviewController.addJavaScriptHandler(
         handlerName: 'web2app_requestPayment',
@@ -206,29 +224,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
           Log.d('[인앱 결제 연동] 웹프론트 -> 앱');
           Log.d("	유저가 결제상품을 클릭 시 앱으로 해당 결제상품의 key, 회원 id 전달 $args");
 
-
-          if(await _purchaseProvider.isAvailable()){
+          if (await _purchaseProvider.isAvailable()) {
             await _purchaseProvider.fetchUserProducts();
-          }else{
+          } else {
             Log.d("인앱 결제 사용 불가능");
           }
         });
-
-
-    _webviewController.addJavaScriptHandler(
-        handlerName: 'web2app_requestPayment',
-        callback: (args) async {
-          Log.d('[인앱 결제 연동] 웹프론트 -> 앱');
-          Log.d("	유저가 결제상품을 클릭 시 앱으로 해당 결제상품의 key, 회원 id 전달 $args");
-
-
-          if(await _purchaseProvider.isAvailable()){
-            await _purchaseProvider.fetchUserProducts();
-          }else{
-            Log.d("인앱 결제 사용 불가능");
-          }
-        });
-
 
     _webviewController.addJavaScriptHandler(
         handlerName: 'web2app_requestPushToken',
@@ -236,17 +237,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
           Log.d('[푸쉬 토큰] 웹프론트 -> 앱');
           Log.d("웹에서 앱으로 유저의 id 값 전달 $args");
 
-          try{
+          try {
             final httpService = ref.watch(networkProvider);
             final fcmToken = await DeviceRequests.getFcmToken();
             final response = await httpService.sendToPush(args.first, fcmToken!);
             Log.d("푸쉬 토큰 전송 성공 " + response.toString());
-          }catch(e){
+          } catch (e) {
             Log.d("푸쉬 토큰 전송 실패");
           }
-
         });
-
 
     _webviewController.addJavaScriptHandler(
         handlerName: 'web2app_playAd',
@@ -255,25 +254,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
           Log.d("웹에서 앱으로 유저의 id 값 전달 $args");
         });
 
-
     _webviewController.addJavaScriptHandler(
         handlerName: 'web2app_shareToSNS',
         callback: (args) async {
           Log.d('[캡쳐내용 SNS 공유기능] 웹프론트 -> 앱');
-          Log.d("웹에서 기능 구현 후 파일 저장 및 파일명 앱으로 전송 $args");
+          Log.d("웹에서 기능 구현 후 파일 저장 및 파일명 앱으로 전송");
 
-          // var status = args['data'];
-          //
+          String base64string = args[0];
+          // var shareStatus = ShareStatus.fromJson(args);
+
+          Log.d("shareStatus : $base64string");
+
+          final name = DateTime.now().millisecondsSinceEpoch;
+          final decodedBytes = base64Decode(base64string);
+          Directory tempdirectory = await pp.getTemporaryDirectory();
+
+          File file = File("${tempdirectory.path}/$name.png");
+          await file.writeAsBytes(decodedBytes);
+          final fileSize = await file.length();
+          final filePath = file.path;
+
+          Log.d("file size... $fileSize");
+          Log.d("filePath... $filePath");
+
+          final result = await Share.shareXFiles([XFile(filePath)], text: 'Great picture');
+          Log.d('result.. ${result.status}');
+
+          if (result.status == ShareResultStatus.success) {
+            Log.d('Thank you for sharing the picture!');
+            await file.delete();
+          }
 
 
 
-          // final decodedBytes = base64Decode(base64string);
-          // Directory tempdirectory = await pp.getTemporaryDirectory();
-          //
-          // File file = File("${tempdirectory.path}/${name}.${extension}");
-          // file.writeAsBytes(decodedBytes);
         });
-
   }
 
   void evaluateJavascript(String script) async {
@@ -287,7 +301,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
   @override
   bool get wantKeepAlive => true;
   static const bridgeScript = '';
-
 
   void showNeedMicPermissionsDialog() {
     DialogService.show(
@@ -310,7 +323,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
   }
 }
 
-
 class JavascriptChannel {
   final String name;
   final OnReceivedJSONObject onReceived;
@@ -319,5 +331,3 @@ class JavascriptChannel {
 }
 
 typedef OnReceivedJSONObject = void Function(Map<String, dynamic>);
-
-
