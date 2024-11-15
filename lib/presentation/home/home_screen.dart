@@ -10,6 +10,7 @@ import 'package:cutipie/presentation/util/dialog/dialog_service.dart';
 import 'package:cutipie/presentation/util/gesture_recognizer.dart';
 import 'package:cutipie/presentation/util/http/device_request.dart';
 import 'package:cutipie/presentation/util/http/http_provider.dart';
+import 'package:cutipie/presentation/util/is.dart';
 import 'package:cutipie/presentation/util/purchase/purchase_provider.dart';
 import 'package:cutipie/presentation/util/recrod/record_provider.dart';
 import 'package:cutipie/presentation/util/url.dart';
@@ -19,6 +20,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:path_provider/path_provider.dart' as pp;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -29,6 +31,14 @@ final webKeyProvider = Provider((ref) => GlobalKey());
 
 final baseUriProvider = Provider<String>((ref) {
   return "https://cutipieapp.com";
+});
+
+final consumerIdProvider = Provider<String>((ref) {
+  return "";
+});
+
+final IdProvider = Provider<String>((ref) {
+  return "";
 });
 
 @RoutePage()
@@ -46,6 +56,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   late InAppWebViewController _webviewController;
   final Completer<void> _onPageFinishedCompleter = Completer<void>();
   var gestureRecognizer = NestedVerticalScrollGestureRecognizer();
+  late StreamSubscription<List<PurchaseDetails>> _subscription;
 
   late RecordProvider _recordProvider;
   late PurchaseProvider _purchaseProvider;
@@ -56,6 +67,54 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     _recordProvider = ref.read(recordProvider);
     _purchaseProvider = ref.read(purchaseProvider);
+
+    _subscription = _purchaseProvider.purchaseStream.listen(
+        (List<PurchaseDetails> purchaseDetailsList) {
+      _listenToPurchaseUpdated(purchaseDetailsList);
+    }, onDone: () {
+      _subscription.cancel();
+    }, onError: (Object error) {});
+  }
+
+  void _listenToPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList) async {
+    for (PurchaseDetails purchaseDetails in purchaseDetailsList) {
+      Log.d("결제상태... ${purchaseDetails.status}");
+      switch (purchaseDetails.status) {
+        case PurchaseStatus.pending:
+          break;
+
+        case PurchaseStatus.error:
+          showErrorPurchaseDialog(subTitle: purchaseDetails.error?.message);
+          await _purchaseProvider.completePurchase(purchaseDetails);
+          break;
+
+        case PurchaseStatus.purchased:
+
+          bool isVerified = await _purchaseProvider.verifyPurchase(purchaseDetails);
+
+          if (isVerified) {
+            await _purchaseProvider.completePurchase(purchaseDetails);
+
+
+            final platform = Is.android ? 'android' : 'ios';
+            final userId = _purchaseProvider.userId;
+            final encodedReceiptData = purchaseDetails.verificationData.localVerificationData;
+            final productId = purchaseDetails.productID;
+            final purchaseToken = purchaseDetails.purchaseID;
+
+          }
+
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -212,13 +271,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         });
 
     _webviewController.addJavaScriptHandler(
-        handlerName: 'web2app_startVoiceRecording',
-        callback: (args) {
-          Log.d('녹음 시작!!');
-          _recordProvider.startRecord();
-        });
-
-    _webviewController.addJavaScriptHandler(
         handlerName: 'web2app_finishVoiceRecording',
         callback: (args) async {
           Log.d('전송.');
@@ -232,22 +284,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           Log.d("	유저가 결제상품을 클릭 시 앱으로 해당 결제상품의 key, 회원 id 전달 $args");
 
           if (await _purchaseProvider.isAvailable()) {
-            await _purchaseProvider.fetchUserProducts();
+            _purchaseProvider.setUser(args[1]);
+            final response = await _purchaseProvider.fetchUserProducts();
+
+            Log.d("fetchUserProducts..  $response");
+
+            if (response == false) {
+              showErrorPurchaseDialog();
+              return;
+            }
+
+            try{
+              await _purchaseProvider.purchaseProduct(args.first);
+            }catch(e){
+              showErrorPurchaseDialog(subTitle: "상품 정보가 없습니다. 다시 시도해 주세요.");
+            }
           } else {
             Log.d("인앱 결제 사용 불가능");
-          }
-        });
-
-    _webviewController.addJavaScriptHandler(
-        handlerName: 'web2app_requestPayment',
-        callback: (args) async {
-          Log.d('[인앱 결제 연동] 웹프론트 -> 앱');
-          Log.d("	유저가 결제상품을 클릭 시 앱으로 해당 결제상품의 key, 회원 id 전달 $args");
-
-          if (await _purchaseProvider.isAvailable()) {
-            await _purchaseProvider.fetchUserProducts();
-          } else {
-            Log.d("인앱 결제 사용 불가능");
+            showErrorPurchaseDialog();
           }
         });
 
@@ -336,6 +390,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           await AppSettings.openAppSettings();
         },
         onLeftBtnClicked: () {
+          AutoRouter.of(context).popForced();
+        },
+      ),
+    );
+  }
+
+  void showErrorPurchaseDialog({String? subTitle}) {
+    DialogService.show(
+      context: context,
+      dialog: AppDialog.singleBtn(
+        title: "결제 오류",
+        subTitle: subTitle ?? "결제 정보를 불러오는데 오류가 발생 했습니다.",
+        btnContent: "확인",
+        showContentImg: true,
+        onBtnClicked: () {
           AutoRouter.of(context).popForced();
         },
       ),
