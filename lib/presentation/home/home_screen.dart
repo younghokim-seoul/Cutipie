@@ -33,14 +33,6 @@ final baseUriProvider = Provider<String>((ref) {
   return "https://cutipieapp.com";
 });
 
-final consumerIdProvider = Provider<String>((ref) {
-  return "";
-});
-
-final IdProvider = Provider<String>((ref) {
-  return "";
-});
-
 @RoutePage()
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -411,12 +403,3 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 }
-
-class JavascriptChannel {
-  final String name;
-  final OnReceivedJSONObject onReceived;
-
-  const JavascriptChannel({required this.name, required this.onReceived});
-}
-
-typedef OnReceivedJSONObject = void Function(Map<String, dynamic>);
