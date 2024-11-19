@@ -41,8 +41,7 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen>
-    with AutomaticKeepAliveClientMixin {
+class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAliveClientMixin {
   double progress = 0;
 
   late InAppWebViewController _webviewController;
@@ -60,8 +59,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     _recordProvider = ref.read(recordProvider);
     _purchaseProvider = ref.read(purchaseProvider);
 
-    _subscription = _purchaseProvider.purchaseStream.listen(
-        (List<PurchaseDetails> purchaseDetailsList) {
+    _subscription = _purchaseProvider.purchaseStream.listen((List<PurchaseDetails> purchaseDetailsList) {
       _listenToPurchaseUpdated(purchaseDetailsList);
     }, onDone: () {
       _subscription.cancel();
@@ -81,23 +79,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           break;
 
         case PurchaseStatus.purchased:
-
-
-          try{
+        case PurchaseStatus.restored:
+          Log.d("Product Purchased Or Restored");
+          try {
             bool isVerified = await _purchaseProvider.verifyPurchase(purchaseDetails);
 
             if (isVerified) {
               await _purchaseProvider.completePurchase(purchaseDetails);
               Log.d("결제 완료.");
             }
-          }catch(e){
-             Log.e("결제 실패.. $e");
+          } catch (e) {
+            Log.e("결제 실패.. $e");
           }
 
           break;
         default:
           break;
       }
+      await _purchaseProvider.completePurchase(purchaseDetails);
     }
   }
 
@@ -134,8 +133,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     },
                     onLeftBtnClicked: () {
                       context.router.popForced();
-                      SystemChannels.platform
-                          .invokeMethod('SystemNavigator.pop');
+                      SystemChannels.platform.invokeMethod('SystemNavigator.pop');
                     },
                   ),
                 );
@@ -146,8 +144,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             key: ref.watch(webKeyProvider),
             onLoadResourceWithCustomScheme: (controller, url) async {
               List<String> prefixes = ["intent", "market"];
-              RegExp regExp =
-                  RegExp("^(${prefixes.map(RegExp.escape).join('|')})");
+              RegExp regExp = RegExp("^(${prefixes.map(RegExp.escape).join('|')})");
               if (regExp.hasMatch(url.url.rawValue)) {
                 await _webviewController.stopLoading();
                 return null;
@@ -169,9 +166,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
               if (appScheme.isAppLink()) {
                 print("앱링크 : $handled");
-                await appScheme.launchApp(
-                    mode: LaunchMode
-                        .externalApplication); // 앱 설치 상태에 따라 앱 실행 또는 마켓으로 이동
+                await appScheme.launchApp(mode: LaunchMode.externalApplication); // 앱 설치 상태에 따라 앱 실행 또는 마켓으로 이동
                 return NavigationActionPolicy.CANCEL;
               }
 
@@ -195,13 +190,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
               if (Platform.isIOS) {
                 // safari에서 히스토리가 쌓이지 않아 뒤로가기가 먹통인 현상 해결
-                _webviewController.loadUrl(
-                    urlRequest:
-                        URLRequest(url: WebUri.uri(Uri.parse('about:blank'))));
+                _webviewController.loadUrl(urlRequest: URLRequest(url: WebUri.uri(Uri.parse('about:blank'))));
               }
-              _webviewController.loadUrl(
-                  urlRequest:
-                      URLRequest(url: WebUri(ref.watch(baseUriProvider))));
+              _webviewController.loadUrl(urlRequest: URLRequest(url: WebUri(ref.watch(baseUriProvider))));
             },
             onLoadStop: (controller, url) {
               if (url.toString() == 'about:blank') {
@@ -240,8 +231,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             Permission.speech,
           ].request();
 
-          bool allPermissionsGranted =
-              permissionStatus.values.every((status) => status.isGranted);
+          bool allPermissionsGranted = permissionStatus.values.every((status) => status.isGranted);
           Log.d("allPermissionsGranted... $allPermissionsGranted");
           if (allPermissionsGranted) {
             final isInitSetting = await _recordProvider.initConfigSettings();
@@ -284,9 +274,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               return;
             }
 
-            try{
+            try {
               await _purchaseProvider.purchaseProduct(args.first);
-            }catch(e){
+            } catch (e) {
               showErrorPurchaseDialog(subTitle: "상품 정보가 없습니다. 다시 시도해 주세요.");
             }
           } else {
@@ -304,8 +294,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           try {
             final httpService = ref.watch(networkProvider);
             final fcmToken = await DeviceRequests.getFcmToken();
-            final response =
-                await httpService.sendToPush(args.first, fcmToken!);
+            final response = await httpService.sendToPush(args.first, fcmToken!);
             Log.d("푸쉬 토큰 전송 성공 " + response.toString());
           } catch (e) {
             Log.d("푸쉬 토큰 전송 실패");
@@ -342,8 +331,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           Log.d("file size... $fileSize");
           Log.d("filePath... $filePath");
 
-          final result =
-              await Share.shareXFiles([XFile(filePath)], text: 'Great picture');
+          final result = await Share.shareXFiles([XFile(filePath)], text: 'Great picture');
           Log.d('result.. ${result.status}');
 
           if (result.status == ShareResultStatus.success) {
@@ -357,8 +345,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     if (_onPageFinishedCompleter.isCompleted) {
       _webviewController.evaluateJavascript(source: script);
     } else {
-      await _onPageFinishedCompleter.future.then(
-          (_) => _webviewController.evaluateJavascript(source: script) ?? '');
+      await _onPageFinishedCompleter.future.then((_) => _webviewController.evaluateJavascript(source: script) ?? '');
     }
   }
 
