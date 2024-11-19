@@ -82,18 +82,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
         case PurchaseStatus.purchased:
 
-          bool isVerified = await _purchaseProvider.verifyPurchase(purchaseDetails);
 
-          if (isVerified) {
-            await _purchaseProvider.completePurchase(purchaseDetails);
+          try{
+            bool isVerified = await _purchaseProvider.verifyPurchase(purchaseDetails);
 
-
-            final platform = Is.android ? 'android' : 'ios';
-            final userId = _purchaseProvider.userId;
-            final encodedReceiptData = purchaseDetails.verificationData.localVerificationData;
-            final productId = purchaseDetails.productID;
-            final purchaseToken = purchaseDetails.purchaseID;
-
+            if (isVerified) {
+              await _purchaseProvider.completePurchase(purchaseDetails);
+              Log.d("결제 완료.");
+            }
+          }catch(e){
+             Log.e("결제 실패.. $e");
           }
 
           break;

@@ -144,7 +144,7 @@ class PurchaseProvider {
 
     // 구매 마켓 안드로이드면 google_play를 리턴한다
     Log.d("구매 마켓 ${purchaseDetails.verificationData.source}");
-    return true; // 임시로 true 반환
+    return await httpProvider.sendToPayment(userId, purchaseDetails); // 임시로 true 반환
   }
 
   Future<void> completePurchase(PurchaseDetails purchaseDetails) async {
