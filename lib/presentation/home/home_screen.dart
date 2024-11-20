@@ -10,7 +10,6 @@ import 'package:cutipie/presentation/util/dialog/dialog_service.dart';
 import 'package:cutipie/presentation/util/gesture_recognizer.dart';
 import 'package:cutipie/presentation/util/http/device_request.dart';
 import 'package:cutipie/presentation/util/http/http_provider.dart';
-import 'package:cutipie/presentation/util/is.dart';
 import 'package:cutipie/presentation/util/purchase/purchase_provider.dart';
 import 'package:cutipie/presentation/util/recrod/record_provider.dart';
 import 'package:cutipie/presentation/util/url.dart';

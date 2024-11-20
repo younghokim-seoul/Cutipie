@@ -57,8 +57,7 @@ class PurchaseProvider {
   /// 상품 정보 요청
   Future<bool> fetchUserProducts() async {
     if (products.isEmpty) {
-      ProductDetailsResponse response =
-          await _inAppPurchase.queryProductDetails(kProductIds);
+      ProductDetailsResponse response = await _inAppPurchase.queryProductDetails(kProductIds);
 
       if (response.notFoundIDs.isNotEmpty) {
         Log.d("상품 정보를 찾을수 없음.");
