@@ -72,13 +72,15 @@ class HttpProvider {
 
     Map<String, String> body = {
       'userId': id,
+      'productId': purchaseDetails.productID,
+      'paymentId': purchaseDetails.purchaseID ?? "",
       'verificationData': purchaseDetails.verificationData.localVerificationData,
       'platform': Is.android ? "google" : "apple",
     };
     Uri uri = Uri.parse(url);
     final response = await http.post(uri, headers: headers, body: json.encode(body));
 
-    Log.d("sendToPayment response : ${response.statusCode}");
+      Log.d("sendToPayment response : ${response.statusCode}");
 
     return response.statusCode >= 200 && response.statusCode < 300;
   }
