@@ -72,8 +72,7 @@ class HttpProvider {
 
     Map<String, String> body = {
       'userId': id,
-      'productId': purchaseDetails.productID,
-      'paymentId': purchaseDetails.purchaseID ?? "",
+      'verificationData': purchaseDetails.verificationData.localVerificationData,
       'platform': Is.android ? "google" : "apple",
     };
     Uri uri = Uri.parse(url);
