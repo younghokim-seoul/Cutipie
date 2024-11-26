@@ -23,10 +23,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Image.asset(
-          'assets/icons/app_icon.png',
-          width: 150,
-        ),
+        child: Image.asset('assets/images/splash_icon.png',width: 120,),
       ),
     );
   }
