@@ -79,18 +79,6 @@ class RecordProvider {
 
     _updateProgressState(RecordProgressState.recognized);
     _updateProgressState(RecordProgressState.initial);
-
-    try{
-      await httpProvider.sendToRecordFile("cm38d2n1w000auu4i92kvlvfd", recordPath);
-      Log.d('Record File Upload Success...');
-    }catch(e){
-      Log.d('Record File Upload error $e');
-    }finally{
-      if (await File(recordPath).exists()) {
-        await File(recordPath).delete();
-      }
-    }
-
   }
 
   ///
@@ -107,7 +95,19 @@ class RecordProvider {
   ///
   /// 음성 인식 결과 제출
   ///
-  Future<void> submitRecognizedText(WidgetRef ref) async {
+  Future<bool> submitRecognizedText(String recordId) async {
     _updateProgressState(RecordProgressState.initial);
+    try{
+      await httpProvider.sendToRecordFile(recordId, recordPath);
+      Log.d('Record File Upload Success...');
+      return true;
+    }catch(e){
+      Log.d('Record File Upload error $e');
+      return false;
+    }finally{
+      if (await File(recordPath).exists()) {
+        await File(recordPath).delete();
+      }
+    }
   }
 }

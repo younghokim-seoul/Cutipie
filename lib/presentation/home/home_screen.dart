@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:app_settings/app_settings.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:cutipie/main.dart';
+import 'package:cutipie/presentation/routers.gr.dart';
 import 'package:cutipie/presentation/util/dev_log.dart';
 import 'package:cutipie/presentation/util/dialog/app_dialog.dart';
 import 'package:cutipie/presentation/util/dialog/dialog_service.dart';
@@ -40,7 +41,8 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAliveClientMixin {
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with AutomaticKeepAliveClientMixin {
   double progress = 0;
 
   late InAppWebViewController _webviewController;
@@ -57,14 +59,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
     _recordProvider = ref.read(recordProvider);
     _purchaseProvider = ref.read(purchaseProvider);
 
-    _subscription = _purchaseProvider.purchaseStream.listen((List<PurchaseDetails> purchaseDetailsList) {
+    _subscription = _purchaseProvider.purchaseStream.listen(
+        (List<PurchaseDetails> purchaseDetailsList) {
       _listenToPurchaseUpdated(purchaseDetailsList);
     }, onDone: () {
       _subscription.cancel();
     }, onError: (Object error) {});
   }
 
-  void _listenToPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList) async {
+  void _listenToPurchaseUpdated(
+      List<PurchaseDetails> purchaseDetailsList) async {
     for (PurchaseDetails purchaseDetails in purchaseDetailsList) {
       Log.d("결제상태... ${purchaseDetails.status}");
       switch (purchaseDetails.status) {
@@ -79,8 +83,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
         case PurchaseStatus.purchased:
         case PurchaseStatus.restored:
           Log.d("Product Purchased Or Restored");
+
+          final isVipPurchase =
+              purchaseDetails.productID == 'com.vip.subscription';
+
+          bool isVerified = false;
+
           try {
-            bool isVerified = await _purchaseProvider.verifyPurchase(purchaseDetails);
+            isVerified =
+                await _purchaseProvider.verifyPurchase(purchaseDetails);
 
             if (isVerified) {
               await _purchaseProvider.completePurchase(purchaseDetails);
@@ -88,6 +99,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
             }
           } catch (e) {
             Log.e("결제 실패.. $e");
+          }
+
+          if (!isVipPurchase) {
+            _webviewController.evaluateJavascript(source: """
+                      window.flutter_inappwebview.callHandler('app2web_completedPayment', $isVerified);
+                    """);
+          } else {
+            _webviewController.evaluateJavascript(source: """
+                      window.flutter_inappwebview.callHandler('app2web_completedVip', $isVerified);
+                    """);
           }
 
           break;
@@ -133,7 +154,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
                     },
                     onLeftBtnClicked: () {
                       context.router.popForced();
-                      SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+                      SystemChannels.platform
+                          .invokeMethod('SystemNavigator.pop');
                     },
                   ),
                 );
@@ -144,7 +166,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
             key: ref.watch(webKeyProvider),
             onLoadResourceWithCustomScheme: (controller, url) async {
               List<String> prefixes = ["intent", "market"];
-              RegExp regExp = RegExp("^(${prefixes.map(RegExp.escape).join('|')})");
+              RegExp regExp =
+                  RegExp("^(${prefixes.map(RegExp.escape).join('|')})");
               if (regExp.hasMatch(url.url.rawValue)) {
                 await _webviewController.stopLoading();
                 return null;
@@ -166,7 +189,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
 
               if (appScheme.isAppLink()) {
                 print("앱링크 : $handled");
-                await appScheme.launchApp(mode: LaunchMode.externalApplication); // 앱 설치 상태에 따라 앱 실행 또는 마켓으로 이동
+                await appScheme.launchApp(
+                    mode: LaunchMode
+                        .externalApplication); // 앱 설치 상태에 따라 앱 실행 또는 마켓으로 이동
                 return NavigationActionPolicy.CANCEL;
               }
 
@@ -190,9 +215,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
 
               if (Platform.isIOS) {
                 // safari에서 히스토리가 쌓이지 않아 뒤로가기가 먹통인 현상 해결
-                _webviewController.loadUrl(urlRequest: URLRequest(url: WebUri.uri(Uri.parse('about:blank'))));
+                _webviewController.loadUrl(
+                    urlRequest:
+                        URLRequest(url: WebUri.uri(Uri.parse('about:blank'))));
               }
-              _webviewController.loadUrl(urlRequest: URLRequest(url: WebUri(ref.watch(baseUriProvider))));
+              _webviewController.loadUrl(
+                  urlRequest:
+                      URLRequest(url: WebUri(ref.watch(baseUriProvider))));
             },
             onLoadStop: (controller, url) {
               if (url.toString() == 'about:blank') {
@@ -220,7 +249,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
             Permission.speech,
           ].request();
 
-          bool allPermissionsGranted = permissionStatus.values.every((status) => status.isGranted);
+          bool allPermissionsGranted =
+              permissionStatus.values.every((status) => status.isGranted);
           Log.d("allPermissionsGranted... $allPermissionsGranted");
           if (allPermissionsGranted) {
             final isInitSetting = await _recordProvider.initConfigSettings();
@@ -242,8 +272,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
     _webviewController.addJavaScriptHandler(
         handlerName: 'web2app_finishVoiceRecording',
         callback: (args) async {
-          Log.d('전송.');
+          Log.d('유저가 녹음 시간이 종료 (0초) 되면 전달 (0초 전달)');
           await _recordProvider.stopRecord();
+        });
+
+    _webviewController.addJavaScriptHandler(
+        handlerName: 'web2app_submitVoiceRecording',
+        callback: (args) async {
+          Log.d('유저가 녹음 완료 후 제출 버튼 클릭 시.');
+          final submitResponse =
+              await _recordProvider.submitRecognizedText(args.first);
+
+          _webviewController.evaluateJavascript(source: """
+                      window.flutter_inappwebview.callHandler('app2web_completedVoiceRecording', "$submitResponse","${args.first}" );
+                    """);
         });
 
     _webviewController.addJavaScriptHandler(
@@ -283,7 +325,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
           try {
             final httpService = ref.watch(networkProvider);
             final fcmToken = await DeviceRequests.getFcmToken();
-            final response = await httpService.sendToPush(args.first, fcmToken!);
+            final response =
+                await httpService.sendToPush(args.first, fcmToken!);
             Log.d("푸쉬 토큰 전송 성공 " + response.toString());
           } catch (e) {
             Log.d("푸쉬 토큰 전송 실패");
@@ -295,6 +338,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
         callback: (args) async {
           Log.d('[광고 연동 기능] 웹프론트 -> 앱');
           Log.d("웹에서 앱으로 유저의 id 값 전달 $args");
+          context.router.push(const AdRoute());
         });
 
     _webviewController.addJavaScriptHandler(
@@ -304,7 +348,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
           Log.d("웹에서 기능 구현 후 파일 저장 및 파일명 앱으로 전송");
 
           String base64string = args[0];
-          // var shareStatus = ShareStatus.fromJson(args);
 
           Log.d("shareStatus : $base64string");
 
@@ -320,7 +363,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
           Log.d("file size... $fileSize");
           Log.d("filePath... $filePath");
 
-          final result = await Share.shareXFiles([XFile(filePath)], text: 'Great picture');
+          final result =
+              await Share.shareXFiles([XFile(filePath)], text: 'Great picture');
           Log.d('result.. ${result.status}');
 
           if (result.status == ShareResultStatus.success) {
@@ -334,7 +378,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
         callback: (args) async {
           Log.d("다운로드 퍼미션 웹프론트 -> 앱 $args");
 
-          bool storageGranted = await checkStoragePermission(skipIfExists: false);
+          bool storageGranted =
+              await checkStoragePermission(skipIfExists: false);
 
           Log.d("storageGranted... $storageGranted");
           _webviewController.evaluateJavascript(source: """
@@ -369,7 +414,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
     if (_onPageFinishedCompleter.isCompleted) {
       _webviewController.evaluateJavascript(source: script);
     } else {
-      await _onPageFinishedCompleter.future.then((_) => _webviewController.evaluateJavascript(source: script) ?? '');
+      await _onPageFinishedCompleter.future.then(
+          (_) => _webviewController.evaluateJavascript(source: script) ?? '');
     }
   }
 
@@ -426,7 +472,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
             ? await Permission.photos.request().isGranted
             : await Permission.storage.request().isGranted;
       } else {
-        return sdkInt >= 29 ? true : await Permission.storage.request().isGranted;
+        return sdkInt >= 29
+            ? true
+            : await Permission.storage.request().isGranted;
       }
     } else if (Platform.isIOS) {
       return skipIfExists

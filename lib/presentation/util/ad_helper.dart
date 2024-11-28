@@ -17,7 +17,7 @@ class AdHelper {
 
 // AdManagerBannerAd 객체를 로드하는 함수
 AdManagerBannerAd _loadBannerAd() {
-  const String androidBannerAdUnitId = 'ca-app-pub-3940256099942544/5354046379';
+  const String androidBannerAdUnitId = 'ca-app-pub-3940256099942544/1033173712';
   const String iosBannerAdUnitId = 'ca-app-pub-3940256099942544/5354046379';
 
   String adUnitId = androidBannerAdUnitId;
@@ -26,8 +26,7 @@ AdManagerBannerAd _loadBannerAd() {
   return AdManagerBannerAd(
     adUnitId: adUnitId,
     request: const AdManagerAdRequest(),
-    sizes: [AdSize.banner],
+    sizes: [AdSize.fullBanner],
     listener: AdManagerBannerAdListener(),
   )..load();
 }
-
