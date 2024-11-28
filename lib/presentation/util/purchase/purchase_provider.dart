@@ -5,7 +5,6 @@ import 'package:collection/collection.dart';
 import 'package:cutipie/presentation/util/dev_log.dart';
 import 'package:cutipie/presentation/util/http/http_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
 final purchaseProvider = Provider.autoDispose<PurchaseProvider>((ref) {

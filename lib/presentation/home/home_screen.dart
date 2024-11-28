@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:app_settings/app_settings.dart';
 import 'package:auto_route/auto_route.dart';
+import 'package:cutipie/main.dart';
 import 'package:cutipie/presentation/util/dev_log.dart';
 import 'package:cutipie/presentation/util/dialog/app_dialog.dart';
 import 'package:cutipie/presentation/util/dialog/dialog_service.dart';
@@ -16,13 +17,12 @@ import 'package:cutipie/presentation/util/url.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:path_provider/path_provider.dart' as pp;
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:saver_gallery/saver_gallery.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -54,7 +54,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
   @override
   void initState() {
     super.initState();
-
     _recordProvider = ref.read(recordProvider);
     _purchaseProvider = ref.read(purchaseProvider);
 
@@ -107,6 +106,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     return Scaffold(
       body: SafeArea(
         child: PopScope(
@@ -200,17 +201,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
               if (!_onPageFinishedCompleter.isCompleted) {
                 _onPageFinishedCompleter.complete();
               }
-            },
-            onDownloadStartRequest: (controller, url) async {
-              final directory = await getExternalStorageDirectory();
-              final externalStorageDirPath = directory?.path;
-
-              final taskId = await FlutterDownloader.enqueue(
-                  url: url.toString(),
-                  savedDir: externalStorageDirPath!,
-                  showNotification: true,
-                  openFileFromNotification: true,
-                  saveInPublicStorage: true);
             },
           ),
         ),
@@ -338,6 +328,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
             await file.delete();
           }
         });
+
+    _webviewController.addJavaScriptHandler(
+        handlerName: 'web2app_requestDownloadPermission',
+        callback: (args) async {
+          Log.d("다운로드 퍼미션 웹프론트 -> 앱 $args");
+
+          bool storageGranted = await checkStoragePermission(skipIfExists: false);
+
+          Log.d("storageGranted... $storageGranted");
+          _webviewController.evaluateJavascript(source: """
+                      window.flutter_inappwebview.callHandler('app2web_downloadPermissionResult', $storageGranted);
+                    """);
+        });
+
+    _webviewController.addJavaScriptHandler(
+        handlerName: 'web2app_downloadImage',
+        callback: (args) async {
+          Log.d("캡쳐파일 다운로드..-> 앱 $args");
+          String base64string = args[0];
+
+          Log.d("shareStatus : $base64string");
+          final name = DateTime.now().millisecondsSinceEpoch;
+          final decodedBytes = base64Decode(base64string);
+          Directory tempdirectory = await pp.getTemporaryDirectory();
+
+          final result = await SaverGallery.saveImage(
+            decodedBytes,
+            quality: 60,
+            fileName: "${tempdirectory.path}/$name.png",
+            androidRelativePath: "Pictures/appName/images",
+            skipIfExists: false,
+          );
+
+          Log.d("result... $result");
+        });
   }
 
   void evaluateJavascript(String script) async {
@@ -385,5 +410,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with AutomaticKeepAlive
         },
       ),
     );
+  }
+
+  Future<bool> checkStoragePermission({required bool skipIfExists}) async {
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      return false;
+    }
+
+    if (Platform.isAndroid) {
+      final info = await deviceInfo.androidInfo;
+      final sdkInt = info.version.sdkInt;
+
+      if (skipIfExists) {
+        return sdkInt >= 33
+            ? await Permission.photos.request().isGranted
+            : await Permission.storage.request().isGranted;
+      } else {
+        return sdkInt >= 29 ? true : await Permission.storage.request().isGranted;
+      }
+    } else if (Platform.isIOS) {
+      return skipIfExists
+          ? await Permission.photos.request().isGranted
+          : await Permission.photosAddOnly.request().isGranted;
+    }
+
+    return false;
   }
 }
