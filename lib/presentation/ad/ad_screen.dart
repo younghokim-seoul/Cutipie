@@ -33,8 +33,9 @@ class _AdScreenState extends ConsumerState<AdScreen> {
   }
 
   void _loadFrontAd() {
-    const String androidBannerAdUnitId =
-        'ca-app-pub-7864289712585914/8620540325';
+    const String androidBannerAdUnitId = 'ca-app-pub-7864289712585914/8620540325';
+
+    // ios add key
     const String iosBannerAdUnitId = 'ca-app-pub-3940256099942544/5354046379';
 
     String adUnitId = androidBannerAdUnitId;
@@ -62,11 +63,12 @@ class _AdScreenState extends ConsumerState<AdScreen> {
         onAdDismissedFullScreenContent: (InterstitialAd ad) {
           Log.d('Ad onAdDismissedFullScreenContent.');
           ad.dispose();
-          context.router.popForced(true);
+          context.router.maybePop(true);
         },
         onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
           Log.e('Ad onAdFailedToShowFullScreenContent: $error');
           ad.dispose();
+          context.router.maybePop(false);
         },
       );
       _interstitialAd!.show();

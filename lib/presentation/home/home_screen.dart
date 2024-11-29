@@ -338,7 +338,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         callback: (args) async {
           Log.d('[광고 연동 기능] 웹프론트 -> 앱');
           Log.d("웹에서 앱으로 유저의 id 값 전달 $args");
-          context.router.push(const AdRoute());
+          final adResult = await context.router.push<bool>(const AdRoute());
+
+          Log.d("adResult... $adResult");
+
+          _webviewController.evaluateJavascript(source: """
+                      window.flutter_inappwebview.callHandler('app2web_completedAd', "$adResult");
+                    """);
         });
 
     _webviewController.addJavaScriptHandler(
