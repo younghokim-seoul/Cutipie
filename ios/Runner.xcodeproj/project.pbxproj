@@ -12,7 +12,6 @@
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		5966F77C84FCAA82246A6EBD /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5736137DC8EBA8EE2B622ED9 /* Pods_Runner.framework */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
-		850D0F522CE6CB0800630D22 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 850D0F512CE6CAEE00630D22 /* libsqlite3.tbd */; };
 		8586A7DD2CE5BBBC00D48AAD /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8586A7DC2CE5BBBC00D48AAD /* StoreKit.framework */; };
 		8586A7E02CE5BBE900D48AAD /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8586A7DF2CE5BBE900D48AAD /* GoogleService-Info.plist */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
@@ -87,7 +86,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				850D0F522CE6CB0800630D22 /* libsqlite3.tbd in Frameworks */,
 				5966F77C84FCAA82246A6EBD /* Pods_Runner.framework in Frameworks */,
 				8586A7DD2CE5BBBC00D48AAD /* StoreKit.framework in Frameworks */,
 			);
@@ -505,7 +503,7 @@
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = 6KAPFD29Y2;
 				ENABLE_BITCODE = NO;
-				FLUTTER_BUILD_NUMBER = 3;
+				FLUTTER_BUILD_NUMBER = 7;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -690,7 +688,7 @@
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = 6KAPFD29Y2;
 				ENABLE_BITCODE = NO;
-				FLUTTER_BUILD_NUMBER = 3;
+				FLUTTER_BUILD_NUMBER = 7;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -715,7 +713,7 @@
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = 6KAPFD29Y2;
 				ENABLE_BITCODE = NO;
-				FLUTTER_BUILD_NUMBER = 3;
+				FLUTTER_BUILD_NUMBER = 7;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
