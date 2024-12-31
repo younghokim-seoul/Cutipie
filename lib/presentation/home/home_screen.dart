@@ -90,8 +90,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           bool isVerified = false;
 
           try {
-            isVerified =
-                await _purchaseProvider.verifyPurchase(purchaseDetails);
+            isVerified = await _purchaseProvider.verifyPurchase(purchaseDetails);
 
             if (isVerified) {
               await _purchaseProvider.completePurchase(purchaseDetails);

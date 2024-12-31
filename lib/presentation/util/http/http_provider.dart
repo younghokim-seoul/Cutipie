@@ -9,13 +9,19 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 
 
 final networkProvider = Provider<HttpProvider>((ref) {
-  return HttpProvider();
+  return HttpProvider(isDevMode: true);
 });
 
 class HttpProvider {
 
+  late String baseUrl;
+
+  HttpProvider({required bool isDevMode}) {
+    baseUrl = isDevMode ? "https://dev.cutipieapp.com" : "https://cutipieapp.com";
+  }
+
   Future<String> sendToRecordFile(String recordId, String recordPath) async {
-    const url = "https://cutipieapp.com/api/today-record";
+    var url =  "$baseUrl/api/today-record";
 
     Map<String, String> headers = {
       'Authorization': "apiKey=nCfYVzFv6vDG1DD271DCD27C198F51655xfaCYqCJ3626E8E55txU5FrXCKhZDi8Kya8s",
@@ -43,7 +49,7 @@ class HttpProvider {
 
 
   Future<bool> sendToPush(String id, String token) async {
-    const url = "https://cutipieapp.com/api/user/push-token";
+    var url = "$baseUrl/api/user/push-token";
 
     Map<String, String> headers = {
       'Authorization': "apiKey=nCfYVzFv6vDG1DD271DCD27C198F51655xfaCYqCJ3626E8E55txU5FrXCKhZDi8Kya8s",
@@ -64,7 +70,7 @@ class HttpProvider {
 
 
   Future<bool> sendToPayment(String id, PurchaseDetails purchaseDetails) async {
-    const url = "https://cutipieapp.com/api/verify";
+    var url = "$baseUrl/api/verify";
 
     Map<String, String> headers = {
       'Authorization': "apiKey=nCfYVzFv6vDG1DD271DCD27C198F51655xfaCYqCJ3626E8E55txU5FrXCKhZDi8Kya8s",
