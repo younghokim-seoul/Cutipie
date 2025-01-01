@@ -30,7 +30,8 @@ import 'package:url_launcher/url_launcher_string.dart';
 final webKeyProvider = Provider((ref) => GlobalKey());
 
 final baseUriProvider = Provider<String>((ref) {
-  return "https://cutipieapp.com";
+  // return "https://cutipieapp.com";
+  return "https://dev.cutipieapp.com";
 });
 
 @RoutePage()
