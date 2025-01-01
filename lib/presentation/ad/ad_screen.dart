@@ -36,7 +36,7 @@ class _AdScreenState extends ConsumerState<AdScreen> {
     const String androidBannerAdUnitId = 'ca-app-pub-7864289712585914/8620540325';
 
     // ios add key
-    const String iosBannerAdUnitId = 'ca-app-pub-3940256099942544/5354046379';
+    const String iosBannerAdUnitId = 'ca-app-pub-7864289712585914/7924477693';
 
     String adUnitId = androidBannerAdUnitId;
     if (Is.ios) adUnitId = iosBannerAdUnitId;
