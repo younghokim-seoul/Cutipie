@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:cutipie/presentation/util/constant.dart';
 import 'package:cutipie/presentation/util/dev_log.dart';
 import 'package:cutipie/presentation/util/is.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,7 +10,7 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 
 
 final networkProvider = Provider<HttpProvider>((ref) {
-  return HttpProvider(isDevMode: true);
+  return HttpProvider(isDevMode: Const.isDevMode);
 });
 
 class HttpProvider {

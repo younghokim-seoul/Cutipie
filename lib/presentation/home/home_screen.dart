@@ -6,6 +6,7 @@ import 'package:app_settings/app_settings.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:cutipie/main.dart';
 import 'package:cutipie/presentation/routers.gr.dart';
+import 'package:cutipie/presentation/util/constant.dart';
 import 'package:cutipie/presentation/util/dev_log.dart';
 import 'package:cutipie/presentation/util/dialog/app_dialog.dart';
 import 'package:cutipie/presentation/util/dialog/dialog_service.dart';
@@ -30,8 +31,11 @@ import 'package:url_launcher/url_launcher_string.dart';
 final webKeyProvider = Provider((ref) => GlobalKey());
 
 final baseUriProvider = Provider<String>((ref) {
-  // return "https://cutipieapp.com";
-  return "https://dev.cutipieapp.com";
+
+  if(Const.isDevMode){
+    return "https://dev.cutipieapp.com";
+  }
+  return "https://cutipieapp.com";
 });
 
 @RoutePage()
