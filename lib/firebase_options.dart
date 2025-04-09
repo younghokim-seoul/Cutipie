@@ -50,19 +50,19 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyD_BCUT1F3tZUSvw27GT7U_toI0mHwSHnA',
-    appId: '1:12815672930:android:a5c2fb6b8b3fe2317bd33b',
-    messagingSenderId: '12815672930',
-    projectId: 'cutipie-a2e60',
-    storageBucket: 'cutipie-a2e60.appspot.com',
+    apiKey: 'AIzaSyAhdSPeZFxMYzQ00Wh7_8jD8P0xZBozZOc',
+    appId: '1:195196670651:android:946554fd11f231d8c58f9e',
+    messagingSenderId: '195196670651',
+    projectId: 'style-shop-1cd9b',
+    storageBucket: 'style-shop-1cd9b.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAoby2eU_RxFmKnnjzuE8-GRTJA-P9tFGo',
-    appId: '1:12815672930:ios:0d61ee2d71ebf2d97bd33b',
-    messagingSenderId: '12815672930',
-    projectId: 'cutipie-a2e60',
-    storageBucket: 'cutipie-a2e60.appspot.com',
-    iosBundleId: 'com.cm.cutipie',
+    apiKey: 'AIzaSyAVLJ1A30Q0woqQs-LhhXmdfKfuDc3WtHk',
+    appId: '1:195196670651:ios:390889450441930fc58f9e',
+    messagingSenderId: '195196670651',
+    projectId: 'style-shop-1cd9b',
+    storageBucket: 'style-shop-1cd9b.firebasestorage.app',
+    iosBundleId: 'com.fashionoutlet.app',
   );
 }

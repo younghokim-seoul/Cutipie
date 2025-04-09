@@ -1,4 +1,4 @@
-package com.cutipie.app
+package com.fashionoutlet.app
 
 import io.flutter.embedding.android.FlutterActivity
 

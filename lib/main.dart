@@ -18,8 +18,8 @@ import 'package:permission_handler/permission_handler.dart';
 DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
 
 const channel = AndroidNotificationChannel(
-  'cutipie_importance_channel', // id
-  'cutipie_app', // title
+  'style1st_importance_channel', // id
+  'style1st_app', // title
   description: 'This channel is used for important notifications.',
   // description
   importance: Importance.max,

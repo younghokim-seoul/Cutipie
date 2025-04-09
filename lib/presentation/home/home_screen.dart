@@ -35,7 +35,7 @@ final baseUriProvider = Provider<String>((ref) {
   if(Const.isDevMode){
     return "https://dev.cutipieapp.com";
   }
-  return "https://cutipieapp.com";
+  return "http://styleshop-lb-67158603.ap-northeast-2.elb.amazonaws.com/";
 });
 
 @RoutePage()
@@ -244,6 +244,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void addJavascriptChannels() {
     Log.d('addJavascriptChannels');
 
+
+
     _webviewController.addJavaScriptHandler(
         handlerName: 'web2app_checkVoicePermission',
         callback: (args) async {
@@ -327,11 +329,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           Log.d("웹에서 앱으로 유저의 id 값 전달 $args");
 
           try {
-            final httpService = ref.watch(networkProvider);
             final fcmToken = await DeviceRequests.getFcmToken();
-            final response =
-                await httpService.sendToPush(args.first, fcmToken!);
-            Log.d("푸쉬 토큰 전송 성공 " + response.toString());
+            _webviewController.evaluateJavascript(source: """
+                      window.flutter_inappwebview.callHandler('app2web_requestPushToken ', "$fcmToken","${args.first}" );
+                    """);
+            Log.d("푸쉬 토큰 전송 성공 ");
           } catch (e) {
             Log.d("푸쉬 토큰 전송 실패");
           }
