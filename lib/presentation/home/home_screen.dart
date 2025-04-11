@@ -5,15 +5,12 @@ import 'dart:io';
 import 'package:app_settings/app_settings.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:cutipie/main.dart';
-import 'package:cutipie/presentation/routers.gr.dart';
 import 'package:cutipie/presentation/util/constant.dart';
 import 'package:cutipie/presentation/util/dev_log.dart';
 import 'package:cutipie/presentation/util/dialog/app_dialog.dart';
 import 'package:cutipie/presentation/util/dialog/dialog_service.dart';
 import 'package:cutipie/presentation/util/gesture_recognizer.dart';
 import 'package:cutipie/presentation/util/http/device_request.dart';
-import 'package:cutipie/presentation/util/http/http_provider.dart';
-import 'package:cutipie/presentation/util/purchase/purchase_provider.dart';
 import 'package:cutipie/presentation/util/recrod/record_provider.dart';
 import 'package:cutipie/presentation/util/url.dart';
 import 'package:flutter/foundation.dart';
@@ -21,7 +18,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:path_provider/path_provider.dart' as pp;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:saver_gallery/saver_gallery.dart';
@@ -31,8 +27,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 final webKeyProvider = Provider((ref) => GlobalKey());
 
 final baseUriProvider = Provider<String>((ref) {
-
-  if(Const.isDevMode){
+  if (Const.isDevMode) {
     return "https://dev.cutipieapp.com";
   }
   return "http://styleshop-lb-67158603.ap-northeast-2.elb.amazonaws.com/";
@@ -53,79 +48,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   late InAppWebViewController _webviewController;
   final Completer<void> _onPageFinishedCompleter = Completer<void>();
   var gestureRecognizer = NestedVerticalScrollGestureRecognizer();
-  late StreamSubscription<List<PurchaseDetails>> _subscription;
 
   late RecordProvider _recordProvider;
-  late PurchaseProvider _purchaseProvider;
 
   @override
   void initState() {
     super.initState();
     _recordProvider = ref.read(recordProvider);
-    _purchaseProvider = ref.read(purchaseProvider);
-
-    _subscription = _purchaseProvider.purchaseStream.listen(
-        (List<PurchaseDetails> purchaseDetailsList) {
-      _listenToPurchaseUpdated(purchaseDetailsList);
-    }, onDone: () {
-      _subscription.cancel();
-    }, onError: (Object error) {});
-  }
-
-  void _listenToPurchaseUpdated(
-      List<PurchaseDetails> purchaseDetailsList) async {
-    for (PurchaseDetails purchaseDetails in purchaseDetailsList) {
-      Log.d("결제상태... ${purchaseDetails.status}");
-      switch (purchaseDetails.status) {
-        case PurchaseStatus.pending:
-          break;
-
-        case PurchaseStatus.error:
-          showErrorPurchaseDialog(subTitle: purchaseDetails.error?.message);
-          await _purchaseProvider.completePurchase(purchaseDetails);
-          break;
-
-        case PurchaseStatus.purchased:
-        case PurchaseStatus.restored:
-          Log.d("Product Purchased Or Restored");
-
-          final isVipPurchase =
-              purchaseDetails.productID == 'com.vip.subscription';
-
-          bool isVerified = false;
-
-          try {
-            isVerified = await _purchaseProvider.verifyPurchase(purchaseDetails);
-
-            if (isVerified) {
-              await _purchaseProvider.completePurchase(purchaseDetails);
-              Log.d("결제 완료.");
-            }
-          } catch (e) {
-            Log.e("결제 실패.. $e");
-          }
-
-          if (!isVipPurchase) {
-            _webviewController.evaluateJavascript(source: """
-                      window.flutter_inappwebview.callHandler('app2web_completedPayment', $isVerified);
-                    """);
-          } else {
-            _webviewController.evaluateJavascript(source: """
-                      window.flutter_inappwebview.callHandler('app2web_completedVip', $isVerified);
-                    """);
-          }
-
-          break;
-        default:
-          break;
-      }
-      await _purchaseProvider.completePurchase(purchaseDetails);
-    }
   }
 
   @override
   void dispose() {
-    _subscription.cancel();
     super.dispose();
   }
 
@@ -244,8 +177,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void addJavascriptChannels() {
     Log.d('addJavascriptChannels');
 
-
-
     _webviewController.addJavaScriptHandler(
         handlerName: 'web2app_checkVoicePermission',
         callback: (args) async {
@@ -276,6 +207,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         });
 
     _webviewController.addJavaScriptHandler(
+        handlerName: 'web2app_exitApp',
+        callback: (args) async {
+          Log.d('웹뷰 강제 종료 요청');
+          context.router.popForced();
+          SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+        });
+
+    _webviewController.addJavaScriptHandler(
         handlerName: 'web2app_finishVoiceRecording',
         callback: (args) async {
           Log.d('유저가 녹음 시간이 종료 (0초) 되면 전달 (0초 전달)');
@@ -295,34 +234,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         });
 
     _webviewController.addJavaScriptHandler(
-        handlerName: 'web2app_requestPayment',
-        callback: (args) async {
-          Log.d('[인앱 결제 연동] 웹프론트 -> 앱');
-          Log.d("	유저가 결제상품을 클릭 시 앱으로 해당 결제상품의 key, 회원 id 전달 $args");
-
-          if (await _purchaseProvider.isAvailable()) {
-            _purchaseProvider.setUser(args[1]);
-            final response = await _purchaseProvider.fetchUserProducts();
-
-            Log.d("fetchUserProducts..  $response");
-
-            if (response == false) {
-              showErrorPurchaseDialog();
-              return;
-            }
-
-            try {
-              await _purchaseProvider.purchaseProduct(args.first);
-            } catch (e) {
-              showErrorPurchaseDialog(subTitle: "상품 정보가 없습니다. 다시 시도해 주세요.");
-            }
-          } else {
-            Log.d("인앱 결제 사용 불가능");
-            showErrorPurchaseDialog();
-          }
-        });
-
-    _webviewController.addJavaScriptHandler(
         handlerName: 'web2app_requestPushToken',
         callback: (args) async {
           Log.d('[푸쉬 토큰] 웹프론트 -> 앱');
@@ -337,20 +248,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           } catch (e) {
             Log.d("푸쉬 토큰 전송 실패");
           }
-        });
-
-    _webviewController.addJavaScriptHandler(
-        handlerName: 'web2app_playAd',
-        callback: (args) async {
-          Log.d('[광고 연동 기능] 웹프론트 -> 앱');
-          Log.d("웹에서 앱으로 유저의 id 값 전달 $args");
-          final adResult = await context.router.push<bool>(const AdRoute());
-
-          Log.d("adResult... $adResult");
-
-          _webviewController.evaluateJavascript(source: """
-                      window.flutter_inappwebview.callHandler('app2web_completedAd', "$adResult");
-                    """);
         });
 
     _webviewController.addJavaScriptHandler(

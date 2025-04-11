@@ -1,4 +1,4 @@
-package com.fashionoutlet.app
+package com.nyjgmjh.app
 
 import io.flutter.embedding.android.FlutterActivity
 

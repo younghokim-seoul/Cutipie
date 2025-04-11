@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:cutipie/presentation/routers.dart';
 import 'package:cutipie/presentation/theme/app_color.dart';
 import 'package:cutipie/presentation/theme/app_theme.dart';
-import 'package:cutipie/presentation/util/ad_helper.dart';
 import 'package:cutipie/presentation/util/dev_log.dart';
 import 'package:cutipie/presentation/util/is.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -12,7 +11,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
@@ -131,11 +129,9 @@ Future<void> initializeNotification() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await MobileAds.instance.initialize();
   await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   initializeNotification();
-  AdHelper.init();
   runApp(MyApp());
 }
 

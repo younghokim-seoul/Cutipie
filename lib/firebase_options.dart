@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyAhdSPeZFxMYzQ00Wh7_8jD8P0xZBozZOc',
-    appId: '1:195196670651:android:946554fd11f231d8c58f9e',
+    appId: '1:195196670651:android:146d6a77871da86fc58f9e',
     messagingSenderId: '195196670651',
     projectId: 'style-shop-1cd9b',
     storageBucket: 'style-shop-1cd9b.firebasestorage.app',
@@ -59,10 +59,10 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyAVLJ1A30Q0woqQs-LhhXmdfKfuDc3WtHk',
-    appId: '1:195196670651:ios:390889450441930fc58f9e',
+    appId: '1:195196670651:ios:346f595169dcb61ec58f9e',
     messagingSenderId: '195196670651',
     projectId: 'style-shop-1cd9b',
     storageBucket: 'style-shop-1cd9b.firebasestorage.app',
-    iosBundleId: 'com.fashionoutlet.app',
+    iosBundleId: 'com.nyjgmjh.app',
   );
 }

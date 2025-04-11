@@ -151,8 +151,8 @@ class AppDialog extends Dialog {
                             child: FilledButton(
                               onPressed: onLeftBtnClicked,
                               style: FilledButton.styleFrom(
-                                backgroundColor: AppColor.of.gray1,
-                                foregroundColor: AppColor.of.gray3,
+                                backgroundColor: AppColor.of.red3,
+                                foregroundColor: AppColor.of.white,
                                 elevation: 0,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 16,

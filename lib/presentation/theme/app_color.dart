@@ -19,7 +19,7 @@ class AppColor extends ThemeExtension<AppColor> {
     background1: const Color(0xFFF6F6F9),
     red1: const Color(0xFFFFE4E8),
     red2: const Color(0xFFFF445A),
-    red3: const Color(0xFFF62B44),
+    red3: const Color(0xFFa83238),
     blue1: const Color(0xFFEDEFFF),
     blue2: const Color(0xFF5C6DFF),
     green1: const Color(0xFF79F09A),
