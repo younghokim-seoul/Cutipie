@@ -39,7 +39,6 @@ dependencies:
   icons_launcher: ^3.0.0
   share_plus: ^10.1.2
 
-  record: ^5.2.0
 
   path_provider: ^2.1.1
   saver_gallery: ^3.0.10

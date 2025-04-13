@@ -11,7 +11,6 @@ import 'package:cutipie/presentation/util/dialog/app_dialog.dart';
 import 'package:cutipie/presentation/util/dialog/dialog_service.dart';
 import 'package:cutipie/presentation/util/gesture_recognizer.dart';
 import 'package:cutipie/presentation/util/http/device_request.dart';
-import 'package:cutipie/presentation/util/recrod/record_provider.dart';
 import 'package:cutipie/presentation/util/url.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -49,12 +48,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   final Completer<void> _onPageFinishedCompleter = Completer<void>();
   var gestureRecognizer = NestedVerticalScrollGestureRecognizer();
 
-  late RecordProvider _recordProvider;
-
   @override
   void initState() {
     super.initState();
-    _recordProvider = ref.read(recordProvider);
   }
 
   @override
@@ -178,59 +174,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     Log.d('addJavascriptChannels');
 
     _webviewController.addJavaScriptHandler(
-        handlerName: 'web2app_checkVoicePermission',
-        callback: (args) async {
-          Log.d("권한 체크 $args");
-          Map<Permission, PermissionStatus> permissionStatus = await [
-            Permission.microphone,
-            Permission.speech,
-          ].request();
-
-          bool allPermissionsGranted =
-              permissionStatus.values.every((status) => status.isGranted);
-          Log.d("allPermissionsGranted... $allPermissionsGranted");
-          if (allPermissionsGranted) {
-            final isInitSetting = await _recordProvider.initConfigSettings();
-            if (!isInitSetting) {
-              showNeedMicPermissionsDialog();
-              return;
-            }
-
-            _webviewController.evaluateJavascript(source: """
-                      window.flutter_inappwebview.callHandler('app2web_recordPermissionResult', true,3);
-                    """);
-
-            _recordProvider.startRecord();
-          } else {
-            showNeedMicPermissionsDialog();
-          }
-        });
-
-    _webviewController.addJavaScriptHandler(
         handlerName: 'web2app_exitApp',
         callback: (args) async {
           Log.d('웹뷰 강제 종료 요청');
           context.router.popForced();
           SystemChannels.platform.invokeMethod('SystemNavigator.pop');
-        });
-
-    _webviewController.addJavaScriptHandler(
-        handlerName: 'web2app_finishVoiceRecording',
-        callback: (args) async {
-          Log.d('유저가 녹음 시간이 종료 (0초) 되면 전달 (0초 전달)');
-          await _recordProvider.stopRecord();
-        });
-
-    _webviewController.addJavaScriptHandler(
-        handlerName: 'web2app_submitVoiceRecording',
-        callback: (args) async {
-          Log.d('유저가 녹음 완료 후 제출 버튼 클릭 시.');
-          final submitResponse =
-              await _recordProvider.submitRecognizedText(args.first);
-
-          _webviewController.evaluateJavascript(source: """
-                      window.flutter_inappwebview.callHandler('app2web_completedVoiceRecording', "$submitResponse","${args.first}" );
-                    """);
         });
 
     _webviewController.addJavaScriptHandler(
@@ -250,73 +198,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           }
         });
 
-    _webviewController.addJavaScriptHandler(
-        handlerName: 'web2app_shareToSNS',
-        callback: (args) async {
-          Log.d('[캡쳐내용 SNS 공유기능] 웹프론트 -> 앱');
-          Log.d("웹에서 기능 구현 후 파일 저장 및 파일명 앱으로 전송");
-
-          String base64string = args[0];
-
-          Log.d("shareStatus : $base64string");
-
-          final name = DateTime.now().millisecondsSinceEpoch;
-          final decodedBytes = base64Decode(base64string);
-          Directory tempdirectory = await pp.getTemporaryDirectory();
-
-          File file = File("${tempdirectory.path}/$name.png");
-          await file.writeAsBytes(decodedBytes);
-          final fileSize = await file.length();
-          final filePath = file.path;
-
-          Log.d("file size... $fileSize");
-          Log.d("filePath... $filePath");
-
-          final result =
-              await Share.shareXFiles([XFile(filePath)], text: 'Great picture');
-          Log.d('result.. ${result.status}');
-
-          if (result.status == ShareResultStatus.success) {
-            Log.d('Thank you for sharing the picture!');
-            await file.delete();
-          }
-        });
-
-    _webviewController.addJavaScriptHandler(
-        handlerName: 'web2app_requestDownloadPermission',
-        callback: (args) async {
-          Log.d("다운로드 퍼미션 웹프론트 -> 앱 $args");
-
-          bool storageGranted =
-              await checkStoragePermission(skipIfExists: false);
-
-          Log.d("storageGranted... $storageGranted");
-          _webviewController.evaluateJavascript(source: """
-                      window.flutter_inappwebview.callHandler('app2web_downloadPermissionResult', $storageGranted);
-                    """);
-        });
-
-    _webviewController.addJavaScriptHandler(
-        handlerName: 'web2app_downloadImage',
-        callback: (args) async {
-          Log.d("캡쳐파일 다운로드..-> 앱 $args");
-          String base64string = args[0];
-
-          Log.d("shareStatus : $base64string");
-          final name = DateTime.now().millisecondsSinceEpoch;
-          final decodedBytes = base64Decode(base64string);
-          Directory tempdirectory = await pp.getTemporaryDirectory();
-
-          final result = await SaverGallery.saveImage(
-            decodedBytes,
-            quality: 60,
-            fileName: "${tempdirectory.path}/$name.png",
-            androidRelativePath: "Pictures/appName/images",
-            skipIfExists: false,
-          );
-
-          Log.d("result... $result");
-        });
   }
 
   void evaluateJavascript(String script) async {
@@ -332,65 +213,4 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   bool get wantKeepAlive => true;
   static const bridgeScript = '';
 
-  void showNeedMicPermissionsDialog() {
-    DialogService.show(
-      context: context,
-      dialog: AppDialog.dividedBtn(
-        title: "권한 필요",
-        subTitle: "설정에서 마이크 권한을 허용해 주세요.",
-        leftBtnContent: "취소",
-        showContentImg: false,
-        rightBtnContent: "설정하기",
-        onRightBtnClicked: () async {
-          AutoRouter.of(context).popForced();
-          await AppSettings.openAppSettings();
-        },
-        onLeftBtnClicked: () {
-          AutoRouter.of(context).popForced();
-        },
-      ),
-    );
-  }
-
-  void showErrorPurchaseDialog({String? subTitle}) {
-    DialogService.show(
-      context: context,
-      dialog: AppDialog.singleBtn(
-        title: "결제 오류",
-        subTitle: subTitle ?? "결제 정보를 불러오는데 오류가 발생 했습니다.",
-        btnContent: "확인",
-        showContentImg: true,
-        onBtnClicked: () {
-          AutoRouter.of(context).popForced();
-        },
-      ),
-    );
-  }
-
-  Future<bool> checkStoragePermission({required bool skipIfExists}) async {
-    if (!Platform.isAndroid && !Platform.isIOS) {
-      return false;
-    }
-
-    if (Platform.isAndroid) {
-      final info = await deviceInfo.androidInfo;
-      final sdkInt = info.version.sdkInt;
-
-      if (skipIfExists) {
-        return sdkInt >= 33
-            ? await Permission.photos.request().isGranted
-            : await Permission.storage.request().isGranted;
-      } else {
-        return sdkInt >= 29
-            ? true
-            : await Permission.storage.request().isGranted;
-      }
-    } else if (Platform.isIOS) {
-      return skipIfExists
-          ? await Permission.photos.request().isGranted
-          : await Permission.photosAddOnly.request().isGranted;
-    }
-
-    return false;
-  }
 }
