@@ -1,10 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:app_settings/app_settings.dart';
 import 'package:auto_route/auto_route.dart';
-import 'package:cutipie/main.dart';
 import 'package:cutipie/presentation/util/constant.dart';
 import 'package:cutipie/presentation/util/dev_log.dart';
 import 'package:cutipie/presentation/util/dialog/app_dialog.dart';
@@ -17,19 +14,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart' as pp;
-import 'package:permission_handler/permission_handler.dart';
-import 'package:saver_gallery/saver_gallery.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 final webKeyProvider = Provider((ref) => GlobalKey());
 
 final baseUriProvider = Provider<String>((ref) {
   if (Const.isDevMode) {
-    return "https://dev.cutipieapp.com";
+    return "http://styleshop-lb-67158603.ap-northeast-2.elb.amazonaws.com/";
   }
-  return "http://styleshop-lb-67158603.ap-northeast-2.elb.amazonaws.com/";
+  return "https://hkv777.com";
 });
 
 @RoutePage()
@@ -197,7 +190,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             Log.d("푸쉬 토큰 전송 실패");
           }
         });
-
   }
 
   void evaluateJavascript(String script) async {
@@ -212,5 +204,4 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   bool get wantKeepAlive => true;
   static const bridgeScript = '';
-
 }
