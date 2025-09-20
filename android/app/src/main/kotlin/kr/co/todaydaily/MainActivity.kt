@@ -1,4 +1,4 @@
-package kr.co.dailytoday
+package kr.co.todaydaily
 
 import io.flutter.embedding.android.FlutterActivity
 
