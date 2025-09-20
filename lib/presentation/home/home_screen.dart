@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+
 import 'package:auto_route/auto_route.dart';
 import 'package:cutipie/presentation/util/constant.dart';
 import 'package:cutipie/presentation/util/dev_log.dart';
@@ -22,7 +23,7 @@ final baseUriProvider = Provider<String>((ref) {
   if (Const.isDevMode) {
     return "http://styleshop-lb-67158603.ap-northeast-2.elb.amazonaws.com/";
   }
-  return "https://hkv777.com";
+  return "https://www.dailytoday.kr/";
 });
 
 @RoutePage()

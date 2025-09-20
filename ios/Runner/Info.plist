@@ -1,71 +1,71 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>NSAppTransportSecurity</key>
 	<dict>
-		<key>NSAllowsArbitraryLoads</key>
+		<key>NSAppTransportSecurity</key>
+		<dict>
+			<key>NSAllowsArbitraryLoads</key>
+			<true/>
+		</dict>
+		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true/>
+		<key>CFBundleDevelopmentRegion</key>
+		<string>$(DEVELOPMENT_LANGUAGE)</string>
+		<key>CFBundleDisplayName</key>
+		<string>패션아울렛</string>
+		<key>CFBundleExecutable</key>
+		<string>$(EXECUTABLE_NAME)</string>
+		<key>CFBundleIdentifier</key>
+		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+		<key>CFBundleInfoDictionaryVersion</key>
+		<string>6.0</string>
+		<key>CFBundleName</key>
+		<string>fashionoutlet</string>
+		<key>CFBundlePackageType</key>
+		<string>APPL</string>
+		<key>CFBundleShortVersionString</key>
+		<string>$(FLUTTER_BUILD_NAME)</string>
+		<key>CFBundleSignature</key>
+		<string>????</string>
+		<key>CFBundleVersion</key>
+		<string>$(FLUTTER_BUILD_NUMBER)</string>
+		<key>FirebaseAppDelegateProxyEnabled</key>
+		<string>0</string>
+		<key>LSRequiresIPhoneOS</key>
+		<true/>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>기기의 사진 앨범에 접근하여 제품 이미지를 선택하고 업로드할 수 있도록 사진 라이브러리 접근 권한을 요청합니다.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>기기의 사진 앨범에 접근하여 제품 이미지를 선택하고 업로드할 수 있도록 사진 라이브러리 접근 권한을 요청합니다.</string>
+		<key>UIApplicationSupportsIndirectInputEvents</key>
+		<true/>
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>remote-notification</string>
+			<string>fetch</string>
+		</array>
+		<key>UILaunchStoryboardName</key>
+		<string>LaunchScreen</string>
+		<key>UIMainStoryboardFile</key>
+		<string>Main</string>
+		<key>UIStatusBarHidden</key>
+		<false/>
+		<key>UISupportedInterfaceOrientations</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
+		</array>
+		<key>UISupportedInterfaceOrientations~ipad</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationPortraitUpsideDown</string>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
+		</array>
+		<key>NSCameraUsageDescription</key>
+		<string>제품 사진 업로드 및 비디오 촬영 기능을 위해 카메라 접근 권한을 요청합니다. 이 권한은 사용자가 직접 제품 이미지를 촬영하고 공유하는 데 필요합니다.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>제품 사진 업로드 및 비디오 촬영 기능을 위해 비디오 접근 권한을 요청합니다. 이 권한은 사용자가 직접 제품 이미지를 촬영하고 공유하는 데 필요합니다.</string>
 	</dict>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
-	<key>CFBundleDisplayName</key>
-	<string>패션아울렛</string>
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
-	<key>CFBundleName</key>
-	<string>fashionoutlet</string>
-	<key>CFBundlePackageType</key>
-	<string>APPL</string>
-	<key>CFBundleShortVersionString</key>
-	<string>$(FLUTTER_BUILD_NAME)</string>
-	<key>CFBundleSignature</key>
-	<string>????</string>
-	<key>CFBundleVersion</key>
-	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<key>FirebaseAppDelegateProxyEnabled</key>
-	<string>0</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>기기의 사진 앨범에 접근하여 제품 이미지를 선택하고 업로드할 수 있도록 사진 라이브러리 접근 권한을 요청합니다. </string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>기기의 사진 앨범에 접근하여 제품 이미지를 선택하고 업로드할 수 있도록 사진 라이브러리 접근 권한을 요청합니다. </string>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>remote-notification</string>
-		<string>fetch</string>
-	</array>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
-	<key>UIMainStoryboardFile</key>
-	<string>Main</string>
-	<key>UIStatusBarHidden</key>
-	<false/>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>NSCameraUsageDescription</key>
-	<string>제품 사진 업로드 및 비디오 촬영 기능을 위해 카메라 접근 권한을 요청합니다. 이 권한은 사용자가 직접 제품 이미지를 촬영하고 공유하는 데 필요합니다.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>제품 사진 업로드 및 비디오 촬영 기능을 위해 비디오 접근 권한을 요청합니다. 이 권한은 사용자가 직접 제품 이미지를 촬영하고 공유하는 데 필요합니다.</string>
-</dict>
 </plist>

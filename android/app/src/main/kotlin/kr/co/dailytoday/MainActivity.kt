@@ -1,4 +1,4 @@
-package com.nyjgmjh.app
+package kr.co.dailytoday
 
 import io.flutter.embedding.android.FlutterActivity
 
